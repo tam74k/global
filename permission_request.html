@@ -1,0 +1,30 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
+<title>طلب إذن</title></head>
+<body class="min-h-screen bg-gray-50"><div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+<nav class="bg-white shadow-sm"><div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><div class="flex items-center gap-3"><h1 class="text-sm font-bold" data-company-ar></h1></div><div class="flex items-center gap-4 text-sm"><a href="employee_home.html" class="text-blue-700">الرجوع</a></div></div></nav>
+<main class="max-w-3xl mx-auto p-4"><h2 class="text-xl font-bold mb-4">طلب إذن</h2>
+<form id="permForm" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div><label class="text-sm">من</label><input id="from_ts" type="datetime-local" class="w-full border rounded-lg px-3 py-2" required></div>
+  <div><label class="text-sm">إلى</label><input id="to_ts" type="datetime-local" class="w-full border rounded-lg px-3 py-2" required></div>
+  <div class="md:col-span-2"><label class="text-sm">السبب</label><input id="reason" class="w-full border rounded-lg px-3 py-2" required></div>
+  <div class="md:col-span-2"><label class="text-sm">الموقع (اختياري)</label><input id="location" class="w-full border rounded-lg px-3 py-2"></div>
+  <div class="md:col-span-2"><button class="w-full bg-green-600 text-white rounded-lg py-2">إرسال الطلب</button></div>
+</form></main>
+<script type="module">
+  import { requireAuth } from './js/auth.js'; import { toast, setCompanyBranding } from './js/ui.js'; import { submitPermissionRequest } from './js/api.js';
+  setCompanyBranding(); const ctx = await requireAuth(['employee','supervisor']);
+  const val = id => { const v=document.getElementById(id).value.trim(); return v===''?null:v; };
+  document.getElementById('permForm').addEventListener('submit', async (e)=>{ e.preventDefault();
+    const payload = { from_ts: val('from_ts')? new Date(val('from_ts')).toISOString() : null, to_ts: val('to_ts')? new Date(val('to_ts')).toISOString() : null, reason: val('reason'), location: val('location') };
+    try{ await submitPermissionRequest(payload); toast('تم إرسال الطلب'); e.target.reset(); } catch(err){ toast('فشل الإرسال: '+err.message,'error'); }
+  });
+</script></body></html>

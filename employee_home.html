@@ -1,0 +1,26 @@
+<!doctype html><html lang='ar' dir='rtl'><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
+<title>لوحة الموظف</title></head><body class='min-h-screen bg-gray-50'>
+<div id='toast-holder' class='fixed top-4 right-4 z-50'></div>
+<nav class='bg-white shadow-sm'><div class='max-w-6xl mx-auto px-4 py-3 flex items-center justify-between'>
+  <div class='flex items-center gap-3'><h1 class='text-sm font-bold' data-company-ar></h1><p class='text-xs text-gray-500' data-company-en></p></div>
+  <a href='index.html' id='logout' class='text-red-600'>خروج</a>
+</div></nav>
+<main class='max-w-6xl mx-auto p-4'><h2 class='text-xl font-bold mb-4'>مرحبًا بك</h2>
+<div class='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+  <a href='leave_request.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>🗓️</span><div><p class='font-bold'>طلب إجازة</p><p class='text-sm text-gray-500'>إرسال طلب إجازة</p></div></a>
+  <a href='permission_request.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>⏱️</span><div><p class='font-bold'>طلب إذن</p><p class='text-sm text-gray-500'>ساعات/خروج مؤقت</p></div></a>
+  <a href='hr_request.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>📄</span><div><p class='font-bold'>طلب أوراق HR</p><p class='text-sm text-gray-500'>شهادات/بطاقات</p></div></a>
+  <a href='evaluate_supervisor.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>⭐</span><div><p class='font-bold'>تقييمي لمشرفي</p><p class='text-sm text-gray-500'>مرة كل شهر</p></div></a>
+  <a href='my_profile.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>🧾</span><div><p class='font-bold'>بياناتي</p><p class='text-sm text-gray-500'>عرض البيانات</p></div></a>
+</div></main>
+<script type='module'>import { requireAuth } from './js/auth.js'; import { setCompanyBranding } from './js/ui.js'; setCompanyBranding(); const ctx = await requireAuth(['employee']); document.getElementById('logout').addEventListener('click', async (e)=>{ e.preventDefault(); (await import('./js/auth.js')).supabase.auth.signOut(); location.href='index.html'; });</script>
+</body></html>
