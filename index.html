@@ -1,0 +1,53 @@
+<!doctype html><html lang='ar' dir='rtl'><head>  <meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <script src='https://cdn.tailwindcss.com'></script>
+  <script src='https://unpkg.com/@supabase/supabase-js@2'></script>
+  <script src='https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js'></script>
+  <script>window.COMPANY_NAME_AR='المجموعة العالمية للخدمات الأمنية';window.COMPANY_NAME_EN='Global Security Services Group';window.COMPANY_LOGO_URL='';</script></head><body class='min-h-screen bg-gray-50'>
+<div id='toast-holder' class='fixed top-4 right-4 z-50 space-y-2'></div>
+<div class='min-h-screen flex items-center justify-center p-4'>
+  <div class='bg-white rounded-2xl shadow-xl p-6 w-full max-w-md'>
+    <div class='text-center mb-6'>
+      <div class='w-20 h-20 mx-auto rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden'>
+        <img id='companyLogo' class='w-full h-full object-contain hidden' alt='logo'>
+        <svg id='logoFallback' class='w-10 h-10 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7'/>
+        </svg>
+      </div>
+      <h1 class='text-xl font-extrabold mt-2' data-company-ar></h1>
+      <p class='text-sm text-gray-500' data-company-en></p>
+    </div>
+    <h2 class='text-lg font-bold mb-4'>تسجيل الدخول</h2>
+    <form id='loginForm' class='space-y-3'>
+      <div><label class='block text-sm mb-1'>البريد الإلكتروني</label><input id='email' type='email' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div><label class='block text-sm mb-1'>كلمة المرور</label><input id='password' type='password' class='w-full border rounded-lg px-3 py-2' required></div>
+      <button class='w-full bg-blue-600 text-white rounded-lg py-2'>دخول</button>
+    </form>
+    <p class='text-sm text-center mt-4'>ليس لديك حساب؟ <a href='register.html' class='text-blue-600'>إنشاء حساب</a></p>
+  </div>
+</div>
+<script type='module'>
+  import { supabase } from './js/auth.js'; import { toast, setCompanyBranding } from './js/ui.js';
+  setCompanyBranding();
+  document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email=document.getElementById('email').value.trim();
+    const password=document.getElementById('password').value.trim();
+    try{
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error){
+        const msg = (error.message || '').toLowerCase();
+        if(msg.includes('email') && msg.includes('not') && msg.includes('confirmed')){
+          return toast('البريد الإلكتروني غير مُفعّل. من فضلك فعّل بريدك أولًا.', 'error');
+        }
+        if(msg.includes('invalid login credentials')){
+          return toast('بيانات الدخول غير صحيحة: تأكد من البريد وكلمة المرور.', 'error');
+        }
+        return toast('فشل تسجيل الدخول: ' + error.message, 'error');
+      }
+      toast('تم تسجيل الدخول بنجاح');
+      window.location.href='dashboard.html';
+    }catch(err){
+      toast('خطأ غير متوقع أثناء تسجيل الدخول', 'error');
+    }
+  });
+</script></body></html>

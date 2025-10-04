@@ -1,0 +1,86 @@
+<!doctype html><html lang='ar' dir='rtl'><head>  <meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <script src='https://cdn.tailwindcss.com'></script>
+  <script src='https://unpkg.com/@supabase/supabase-js@2'></script>
+  <script src='https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js'></script>
+  <script>window.COMPANY_NAME_AR='المجموعة العالمية للخدمات الأمنية';window.COMPANY_NAME_EN='Global Security Services Group';window.COMPANY_LOGO_URL='';</script></head><body class='min-h-screen bg-gray-50'>
+<div id='toast-holder' class='fixed top-4 right-4 z-50'></div>
+<div class='min-h-screen flex items-center justify-center p-4'>
+  <div class='bg-white rounded-2xl shadow-xl p-6 w-full max-w-xl'>
+    <div class='text-center mb-6'><h1 class='text-xl font-extrabold' data-company-ar></h1><p class='text-sm text-gray-500' data-company-en></p></div>
+    <h2 class='text-lg font-bold mb-4'>إنشاء حساب</h2>
+    <form id='regForm' class='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <div><label class='block text-sm mb-1'>الكود الوظيفي (jobID)</label><input id='jobID' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div><label class='block text-sm mb-1'>نوع الحساب</label><select id='role' class='w-full border rounded-lg px-3 py-2' required><option value=''>اختر</option><option value='employee'>موظف</option><option value='supervisor'>مشرف</option></select></div>
+      <div><label class='block text-sm mb-1'>الاسم</label><input id='name' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div><label class='block text-sm mb-1'>كود المشرف (اختياري)</label><input id='supCode' class='w-full border rounded-lg px-3 py-2' placeholder='SUP001'></div>
+      <div><label class='block text-sm mb-1'>البريد الإلكتروني</label><input id='email' type='email' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div><label class='block text-sm mb-1'>رقم الموبايل</label><input id='mobile' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div class='md:col-span-2'><label class='block text-sm mb-1'>كلمة المرور</label><input id='password' type='password' class='w-full border rounded-lg px-3 py-2' required></div>
+      <div class='md:col-span-2'><button class='w-full bg-green-600 text-white rounded-lg py-2'>تسجيل</button></div>
+    </form>
+    <p class='text-sm text-center mt-4'>لديك حساب؟ <a href='index.html' class='text-blue-600'>تسجيل الدخول</a></p>
+  </div>
+</div>
+<script type='module'>
+  import { supabase } from './js/auth.js';
+  import { toast, setCompanyBranding } from './js/ui.js';
+  setCompanyBranding();
+
+  document.getElementById('regForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const email=document.getElementById('email').value.trim();
+    const password=document.getElementById('password').value.trim();
+    const name=document.getElementById('name').value.trim();
+    const jobID=document.getElementById('jobID').value.trim();
+    const mobile=document.getElementById('mobile').value.trim();
+    const role=document.getElementById('role').value;
+    const supCode=document.getElementById('supCode').value.trim() || null;
+
+    try{
+      // 1) Sign up
+      let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password });
+      if(authErr){
+        const m = (authErr.message||'').toLowerCase();
+        if(m.includes('already registered')){
+          return toast('هذا البريد مسجّل مسبقًا. جرّب تسجيل الدخول.', 'error');
+        }
+        return toast('تعذّر إنشاء الحساب: ' + authErr.message, 'error');
+      }
+
+      // 2) Ensure session (if confirm email is enabled, sign-in may fail until activation)
+      let uid = authData.user?.id || null;
+      if(!uid){
+        const res = await supabase.auth.signInWithPassword({ email, password });
+        if(res.error){
+          const msg=(res.error.message||'').toLowerCase();
+          if(msg.includes('email') && msg.includes('not') && msg.includes('confirmed')){
+            toast('تم إنشاء الحساب. من فضلك فعّل بريدك الإلكتروني ثم سجّل الدخول.', 'success');
+            return;
+          }
+          return toast('تم إنشاء الحساب لكن تعذّر تسجيل الدخول: ' + res.error.message, 'error');
+        }
+        uid = res.data.user.id;
+      }
+
+      // 3) Insert into public.users (RLS requires id = auth.uid())
+      const row = { id: uid, email, mobile, jobID, Name: name, POS2: (role==='supervisor'?'supervisor':'employee'), Active: true };
+      if(supCode) row['SupervisorCode'] = supCode;
+
+      let { error: insErr } = await supabase.from('users').insert([row]);
+      if(insErr){
+        // retry without SupervisorCode if column missing
+        delete row['SupervisorCode'];
+        const { error: retryErr } = await supabase.from('users').insert([row]);
+        if(retryErr){
+          return toast('تم إنشاء الحساب ولكن فشل حفظ بيانات الموظف: ' + retryErr.message, 'error');
+        }
+      }
+
+      toast('تم إنشاء الحساب وحفظ البيانات بنجاح. يمكنك تسجيل الدخول الآن.');
+      window.location.href='index.html';
+
+    }catch(err){
+      toast('خطأ غير متوقع أثناء إنشاء الحساب', 'error');
+    }
+  });
+</script></body></html>

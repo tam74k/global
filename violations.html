@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GSSG</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <script>
+    // expose company variables for ui.js
+    window.COMPANY_NAME_AR = "المجموعة العالمية للخدمات الأمنية";
+    window.COMPANY_NAME_EN = "Global Security Services Group";
+    window.COMPANY_LOGO_URL = "";
+  </script>
+
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <h1 class="text-sm font-bold" data-company-ar></h1>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <a href="dashboard.html" class="text-blue-700">الرجوع</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto p-4">
+    <section class="bg-white rounded-2xl shadow p-4 md:p-6 mb-4">
+      <h2 class="text-lg font-bold mb-3">إصدار إنذار جديد (مشرف)</h2>
+      <form id="warnForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-1">كود الموظف (jobID)</label>
+          <input id="jobID" class="w-full border rounded-lg px-3 py-2" placeholder="EMP001" required>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">رمز المخالفة (اختياري)</label>
+          <input id="itemCode" class="w-full border rounded-lg px-3 py-2" placeholder="مثال: C-6">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-1">سبب/تفاصيل الإنذار</label>
+          <textarea id="reason" class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="اكتب السبب..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">الموقع</label>
+          <input id="location" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">ملاحظات</label>
+          <input id="remarks" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div class="md:col-span-2">
+          <button class="w-full bg-red-600 text-white rounded-lg py-2">إصدار إنذار</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow p-4 md:p-6">
+      <h2 class="text-lg font-bold mb-3">إنذاراتي</h2>
+      <div id="violList" class="space-y-2"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { findUserByJobID, createViolation, listMyViolations } from './js/api.js';
+    import { toast, setCompanyBranding } from './js/ui.js';
+    setCompanyBranding();
+
+    const ctx = await requireAuth(['employee','supervisor']);
+    if(!ctx) { /* redirected if not authed */ }
+
+    document.getElementById('warnForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      // only supervisors can insert (RLS)
+      const jobID = document.getElementById('jobID').value.trim();
+      const employee = await findUserByJobID(jobID);
+      if(!employee) return toast('كود موظف غير صحيح', 'error');
+      const payload = {
+        employee_id: employee.id,
+        item_code: document.getElementById('itemCode').value.trim() || null,
+        reason: document.getElementById('reason').value.trim() || null,
+        location: document.getElementById('location').value.trim() || null,
+        remarks: document.getElementById('remarks').value.trim() || null
+      };
+      try{ await createViolation(payload); toast('تم إصدار الإنذار'); e.target.reset(); renderMine(); }
+      catch(err){ toast(err.message, 'error'); }
+    });
+
+    async function renderMine(){
+      const box = document.getElementById('violList');
+      const rows = await listMyViolations();
+      if(rows.length===0) return box.innerHTML = '<p class="text-sm text-gray-500">لا توجد إنذارات</p>';
+      box.innerHTML = rows.map(v=>`<div class="border rounded-lg p-2 text-sm flex justify-between">
+        <span class="font-mono">${ new Date(v.issue_datetime).toLocaleString('ar-EG') }</span>
+        <span>${ v.item_code || '—' }</span>
+        <span class="truncate">${ v.reason || '—' }</span>
+        <span class="text-gray-500">${ v.location || '' }</span>
+      </div>`).join('');
+    }
+    renderMine();
+  </script>
+</body>
+</html>
