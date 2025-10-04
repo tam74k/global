@@ -10,7 +10,7 @@
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
 <title>تسجيل</title></head>
 <body class="min-h-screen bg-gray-50">
-<div class="fixed top-4 right-4 z-50" id="toast-holder"></div>
+<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 <div class="min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow p-6 w-full max-w-xl">
     <h1 class="text-xl font-extrabold mb-4" data-company-ar></h1>
@@ -31,10 +31,11 @@
 import { supabase } from './js/auth.js'; import { toast, setCompanyBranding } from './js/ui.js'; setCompanyBranding();
 document.getElementById('regForm').addEventListener('submit', async (e)=>{ e.preventDefault();
  const email=document.getElementById('email').value.trim(), password=document.getElementById('password').value.trim(), name=document.getElementById('name').value.trim(), jobID=document.getElementById('jobID').value.trim(), mobile=document.getElementById('mobile').value.trim(), role=document.getElementById('role').value, supCode=document.getElementById('supCode').value.trim()||null;
- try{ let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password }); if(authErr){ const m=(authErr.message||'').toLowerCase(); if(m.includes('already registered')) return toast('هذا البريد مسجّل مسبقًا','error'); return toast('تعذر إنشاء الحساب: '+authErr.message,'error'); }
-  let uid = authData.user?.id || null; if(!uid){ const res = await supabase.auth.signInWithPassword({ email, password }); if(res.error){ const msg=(res.error.message||'').toLowerCase(); if(msg.includes('email')&&msg.includes('not')&&msg.includes('confirmed')){ toast('تم إنشاء الحساب. فعّل بريدك ثم سجّل الدخول.','success'); return; } return toast('تم إنشاء الحساب لكن تعذر تسجيل الدخول: '+res.error.message,'error'); } uid=res.data.user.id; }
-  const row = { id: uid, email, mobile, jobID, Name: name, Roll: role, SupervisorCode: supCode, Active: true };
-  let { error: insErr } = await supabase.from('users').insert([row]); if(insErr){ delete row['SupervisorCode']; const { error: retryErr } = await supabase.from('users').insert([row]); if(retryErr) return toast('تم إنشاء الحساب لكن فشل حفظ البيانات: '+retryErr.message,'error'); }
-  toast('تم إنشاء الحساب بنجاح'); location.href='index.html';
- }catch{ toast('خطأ غير متوقع أثناء إنشاء الحساب','error'); }
-});</script></body></html>
+ let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password }); if(authErr) return toast('تعذر إنشاء الحساب: '+authErr.message,'error');
+ let uid = authData.user?.id || (await supabase.auth.signInWithPassword({ email, password })).data?.user?.id;
+ const row = { id: uid, email, mobile, jobID, Name: name, Roll: role, SupervisorCode: supCode, Active: true };
+ let { error: insErr } = await supabase.from('users').insert([row]);
+ if(insErr) return toast('تم إنشاء الحساب لكن فشل حفظ البيانات: '+insErr.message,'error');
+ toast('تم إنشاء الحساب بنجاح'); location.href='index.html';
+});
+</script></body></html>

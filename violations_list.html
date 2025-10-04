@@ -1,0 +1,95 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <title>سجل الإنذارات</title>
+</head><body class="min-h-screen bg-gray-50">
+<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between"><div class="flex items-center gap-3"><h1 class="text-sm font-bold">سجل الإنذارات</h1></div><div class="flex items-center gap-4 text-sm"><a href="dashboard.html" class="text-blue-700">الرجوع</a></div></div></nav>
+<main class="max-w-7xl mx-auto p-4">
+  <section class="bg-white rounded-2xl shadow p-4 mb-4">
+    <div class="grid sm:grid-cols-6 gap-3">
+      <div class="sm:col-span-2"><label class="text-sm">موظف</label><select id="emp" class="w-full border rounded px-3 py-2"></select></div>
+      <div><label class="text-sm">من تاريخ</label><input id="from" type="date" class="w-full border rounded px-3 py-2"></div>
+      <div><label class="text-sm">إلى تاريخ</label><input id="to" type="date" class="w-full border rounded px-3 py-2"></div>
+      <div class="sm:col-span-2 flex items-end gap-2">
+        <button id="apply" class="px-4 py-2 bg-blue-600 text-white rounded">تطبيق</button>
+        <button id="thisMonth" class="px-4 py-2 bg-gray-100 rounded">الشهر الحالي</button>
+        <button id="exportCsv" class="px-4 py-2 bg-emerald-600 text-white rounded">تصدير CSV</button>
+        <button id="print" class="px-4 py-2 bg-gray-700 text-white rounded">طباعة</button>
+      </div>
+    </div>
+  </section>
+  <section class="bg-white rounded-2xl shadow p-4" id="printArea">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead><tr class="text-right">
+          <th class="p-2">التاريخ/الوقت</th><th class="p-2">الكود</th><th class="p-2">الاسم</th><th class="p-2">الرمز</th><th class="p-2">التصنيف</th><th class="p-2">السبب</th><th class="p-2">الموقع</th><th class="p-2">ملاحظات</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script type="module">
+  import { requireAuth } from './js/auth.js';
+  import { listEmployeesForSupervisor, listSupervisorViolationsRange } from './js/api.js';
+
+  function defaultMonthRange(){
+    const d = new Date();
+    const from = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10);
+    const to = new Date().toISOString().slice(0,10);
+    return { from, to };
+  }
+  const fromEl = document.getElementById('from');
+  const toEl = document.getElementById('to');
+  const empSel = document.getElementById('emp');
+  const rows = document.getElementById('rows');
+  function setThisMonth(){ const r=defaultMonthRange(); fromEl.value=r.from; toEl.value=r.to; }
+  setThisMonth();
+
+  await requireAuth(['supervisor']);
+  const employees = await listEmployeesForSupervisor();
+  empSel.innerHTML = '<option value="">الكل</option>' + (employees||[]).map(e=>`<option value="${e.id}">${e.jobID||''} — ${e.Name||e.En_Name||''}</option>`).join('');
+
+  function toCSV(arr){
+    const header = ['datetime','jobID','name','item_code','category','reason','location','remarks'];
+    const lines = [header.join(',')];
+    for(const r of arr){ lines.push([r.dt, r.jobID, r.name, r.item_code||'', r.category||'', r.reason||'', r.location||'', r.remarks||''].map(x=>('"'+String(x).replaceAll('"','""')+'"')).join(',')); }
+    return lines.join('\n');
+  }
+
+  async function load(){
+    const { records, employees: emps } = await listSupervisorViolationsRange({ from: fromEl.value, to: toEl.value });
+    const map = new Map((emps||[]).map(e=>[e.id, e]));
+    let list = (records||[]).map(v=>{
+      const e = map.get(v.employee_id) || {}; const name = e.Name||e.En_Name||'-', jobID = e.jobID||'-';
+      return { dt: v.issue_datetime? new Date(v.issue_datetime).toLocaleString('en-GB'): '-', jobID, name, ...v };
+    });
+    const filterId = empSel.value;
+    if(filterId) list = list.filter(x=> x.employee_id === filterId);
+    rows.innerHTML = list.map(r=>`<tr class="border-t">
+      <td class="p-2">${r.dt}</td><td class="p-2 font-mono">${r.jobID}</td><td class="p-2">${r.name}</td>
+      <td class="p-2">${r.item_code||'—'}</td><td class="p-2">${r.category||'—'}</td><td class="p-2">${r.reason||'—'}</td><td class="p-2">${r.location||'—'}</td><td class="p-2">${r.remarks||'—'}</td>
+    </tr>`).join('');
+    window.__lastViolations = list;
+  }
+  document.getElementById('apply').addEventListener('click', load);
+  document.getElementById('thisMonth').addEventListener('click', ()=>{ setThisMonth(); load(); });
+  document.getElementById('exportCsv').addEventListener('click', ()=>{
+    const data = window.__lastViolations || [];
+    const csv = toCSV(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `violations_${fromEl.value}_to_${toEl.value}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+  document.getElementById('print').addEventListener('click', ()=> window.print());
+  load();
+</script>
+</body></html>

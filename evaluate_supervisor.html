@@ -10,7 +10,7 @@
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
 <title>تقييمي لمشرفي</title></head>
 <body class='min-h-screen bg-gray-50'><div id='toast-holder' class='fixed top-4 right-4 z-50'></div>
-<nav class='bg-white shadow-sm'><div class='max-w-6xl mx-auto px-4 py-3 flex items-center justify-between'><div class='flex items-center gap-3'><h1 class='text-sm font-bold' data-company-ar></h1></div><div class='flex items-center gap-4 text-sm'><a href='employee_home.html' class='text-blue-700'>الرجوع</a></div></div></nav>
+<nav class='bg-white shadow-sm'><div class='max-w-6xl mx-auto px-4 py-3 flex items-center justify-between'><div class='flex items-center gap-3'><h1 class='text-sm font-bold' data-company-ar></h1></div><div class='flex items-center gap-4 text-sm'><a href='dashboard.html' class='text-blue-700'>الرجوع</a></div></div></nav>
 <main class='max-w-3xl mx-auto p-4'><h2 class='text-xl font-bold mb-4'>تقييم مشرفي (شهري)</h2>
 <div id='box' class='bg-white rounded-2xl shadow p-4'>
   <div class='mb-3'><span class='text-gray-600'>اسم المشرف: </span><span id='supName' class='font-bold'>—</span></div>
@@ -20,7 +20,7 @@
 </div></main>
 <script type='module'>
   import { requireAuth } from './js/auth.js'; import { getMySupervisor, submitEmployeeEval } from './js/api.js'; import { toast, setCompanyBranding } from './js/ui.js';
-  setCompanyBranding(); const ctx = await requireAuth(['employee','supervisor']); const sup = await getMySupervisor();
+  setCompanyBranding(); const ctx = await requireAuth(['employee']); const sup = await getMySupervisor();
   if(sup) document.getElementById('supName').textContent = sup.Name || sup.En_Name || '—';
   document.getElementById('save').addEventListener('click', async ()=>{ const score = parseInt(document.getElementById('score').value); const notes = document.getElementById('notes').value.trim();
     if(!sup) return toast('لم يتم ربط مشرف لك (SupervisorCode).','error'); if(!score || score<1 || score>10) return toast('أدخل تقييم بين 1 و10','error');
