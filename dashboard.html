@@ -58,7 +58,7 @@
     fillCards();
     document.getElementById('logout').addEventListener('click', async (e)=>{ e.preventDefault(); (await import('./js/auth.js')).supabase.auth.signOut(); location.href='index.html'; });
   }
-  window.addEventListener('pageshow', ()=>{ if(!cards.innerHTML){ fillCards(); } });
+  window.addEventListener('pageshow', ()=>{ boot(); });
   boot();
 </script>
 </body></html>
