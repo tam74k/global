@@ -1,4 +1,6 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -14,7 +16,7 @@
 <script type="module" src="./js/config.js"></script>
 
 <script>
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   try{
     const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
     const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
@@ -24,22 +26,23 @@
     const fb = document.getElementById('logoFallback');
     if (logo && window.COMPANY_LOGO_URL){
       logo.src = window.COMPANY_LOGO_URL;
-      logo.classList.remove('hidden');
-      if (fb) fb.classList.add('hidden');
+      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
+      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
     } else if (fb) {
       fb.classList.remove('hidden');
     }
   }catch(e){}
-})();
+});
 </script>
-<title>دخول</title></head><body class='min-h-screen bg-gray-50'>
+
+<title>دخول</title></head><body class="min-h-screen bg-gray-50">
 <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 <div class="min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
     <div class="text-center mb-6">
       <div class="w-20 h-20 mx-auto rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
         <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
-        <svg id="logoFallback" class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+        <svg id="logoFallback" class="w-10 h-10 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
       </div>
       <h1 class="text-xl font-extrabold mt-2" data-company-ar></h1>
       <p class="text-sm text-gray-500" data-company-en></p>

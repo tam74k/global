@@ -1,1 +1,72 @@
-<!-- placeholder -->
+<!doctype html><html lang='ar' dir='rtl'><head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+
+<script type="module" src="./js/config.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
+    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
+    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
+    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
+    const logo = document.getElementById('companyLogo');
+    const fb = document.getElementById('logoFallback');
+    if (logo && window.COMPANY_LOGO_URL){
+      logo.src = window.COMPANY_LOGO_URL;
+      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
+      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
+    } else if (fb) {
+      fb.classList.remove('hidden');
+    }
+  }catch(e){}
+});
+</script>
+<title>تسجيل مخالفة</title></head><body class='min-h-screen bg-gray-50'>
+<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+
+<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
+      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+    </div>
+    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
+  </div>
+  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
+</div></nav>
+<main class="max-w-4xl mx-auto p-4">
+<section class="bg-white rounded-2xl shadow p-4 md:p-6 mb-4">
+  <h2 class="text-lg font-bold mb-3">إصدار إنذار جديد (مشرف)</h2>
+  <form id="warnForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div><label class="block text-sm mb-1">كود الموظف (jobID)</label><input id="jobID" class="w-full border rounded-lg px-3 py-2" placeholder="EMP001" required></div>
+    <div><label class="block text-sm mb-1">رمز المخالفة (اختياري)</label><input id="itemCode" class="w-full border rounded-lg px-3 py-2" placeholder="مثال: C-6"></div>
+    <div class="md:col-span-2"><label class="block text-sm mb-1">سبب/تفاصيل الإنذار</label><textarea id="reason" class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="اكتب السبب..."></textarea></div>
+    <div><label class="block text-sm mb-1">الموقع</label><input id="location" class="w-full border rounded-lg px-3 py-2"></div>
+    <div><label class="block text-sm mb-1">ملاحظات</label><input id="remarks" class="w-full border rounded-lg px-3 py-2"></div>
+    <div class="md:col-span-2"><button class="w-full bg-red-600 text-white rounded-lg py-2">إصدار إنذار</button></div>
+  </form>
+</section>
+</main>
+<script type="module">
+  import { requireAuth } from './js/auth.js'; import { setRoleBadge, toast } from './js/ui.js';
+  import { findUserByJobID } from './js/api.js';
+  const ctx = await requireAuth(['supervisor']); if(!ctx) return; setRoleBadge(ctx.role);
+  async function createViolation(payload){ const { error } = await (await import('./js/auth.js')).supabase.from('violations').insert(payload); if(error) throw error; }
+  document.getElementById('warnForm').addEventListener('submit', async (e)=>{ e.preventDefault();
+    const jobID=document.getElementById('jobID').value.trim(); const employee=await findUserByJobID(jobID); if(!employee) return toast('كود موظف غير صحيح','error');
+    const payload={ employee_id: employee.id, item_code: document.getElementById('itemCode').value.trim()||null, reason: document.getElementById('reason').value.trim()||null, location: document.getElementById('location').value.trim()||null, remarks: document.getElementById('remarks').value.trim()||null, issue_datetime: new Date().toISOString(), issued_by: ctx.session.user.id };
+    try{ await createViolation(payload); toast('تم إصدار الإنذار'); e.target.reset(); }catch(err){ toast(err.message,'error'); }
+  });
+</script>
+</body></html>

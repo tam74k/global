@@ -1,16 +1,51 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
-  <title>تقارير الحضور</title>
-</head><body class="min-h-screen bg-gray-50">
+<!doctype html><html lang='ar' dir='rtl'><head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+
+<script type="module" src="./js/config.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
+    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
+    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
+    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
+    const logo = document.getElementById('companyLogo');
+    const fb = document.getElementById('logoFallback');
+    if (logo && window.COMPANY_LOGO_URL){
+      logo.src = window.COMPANY_LOGO_URL;
+      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
+      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
+    } else if (fb) {
+      fb.classList.remove('hidden');
+    }
+  }catch(e){}
+});
+</script>
+<title>تقارير الحضور</title></head><body class='min-h-screen bg-gray-50'>
 <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
-<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between"><div class="flex items-center gap-3"><h1 class="text-sm font-bold">تقارير الحضور</h1></div><div class="flex items-center gap-4 text-sm"><a href="dashboard.html" class="text-blue-700">الرجوع</a></div></div></nav>
-<main class="max-w-7xl mx-auto p-4">
+
+<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
+      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+    </div>
+    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
+  </div>
+  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
+</div></nav>
+<main class="max-w-7xl mx_auto p-4">
   <section class="bg-white rounded-2xl shadow p-4 mb-4">
     <div class="grid sm:grid-cols-5 gap-3">
       <div><label class="text-sm">من تاريخ</label><input id="from" type="date" class="w-full border rounded px-3 py-2"></div>
@@ -27,9 +62,8 @@
       <table class="min-w-full text-sm" id="tbl">
         <thead><tr class="text-right">
           <th class="p-2">الكود</th><th class="p-2">الاسم</th>
-          <th class="p-2">أيام الحضور (P)</th><th class="p-2">غياب (AB)</th><th class="p-2">مرضي (SL)</th>
-          <th class="p-2">سنوي (AL)</th><th class="p-2">خدمة (TR)</th><th class="p-2">OFF</th>
-          <th class="p-2">ساعات العمل</th><th class="p-2">عدد السجلات</th>
+          <th class="p-2">P</th><th class="p-2">AB</th><th class="p-2">SL</th><th class="p-2">AL</th><th class="p-2">TR</th><th class="p-2">OFF</th>
+          <th class="p-2">الساعات</th><th class="p-2">السجلات</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -37,73 +71,19 @@
   </section>
 </main>
 <script type="module">
-  import { supabase, requireAuth } from './js/auth.js';
-  import { listSupervisorAttendanceRange } from './js/api.js';
-
-  function defaultMonthRange(){
-    const d = new Date();
-    const from = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10);
-    const to = new Date().toISOString().slice(0,10);
-    return { from, to };
-  }
-  const fromEl = document.getElementById('from');
-  const toEl = document.getElementById('to');
-  const rows = document.getElementById('rows');
-  function setThisMonth(){ const r=defaultMonthRange(); fromEl.value=r.from; toEl.value=r.to; }
+  import { requireAuth } from './js/auth.js'; import { setRoleBadge } from './js/ui.js'; import { listSupervisorAttendanceRange } from './js/api.js';
+  const ctx = await requireAuth(['supervisor']); if(!ctx) return; setRoleBadge(ctx.role);
+  const fromEl=document.getElementById('from'), toEl=document.getElementById('to'), rows=document.getElementById('rows');
+  function setThisMonth(){ const d=new Date(); fromEl.value=new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10); toEl.value=new Date().toISOString().slice(0,10);}
   setThisMonth();
-
-  await requireAuth(['supervisor']);
-
-  function summarize(records, empMap){
-    const byEmp = {};
-    for(const r of records){
-      const id = r.employee_id;
-      byEmp[id] = byEmp[id] || { P:0, AB:0, SL:0, AL:0, TR:0, OFF:0, hours:0, count:0 };
-      const rec = byEmp[id];
-      const st = r.status || (r.check_in ? 'P' : null);
-      if(st && rec.hasOwnProperty(st)) rec[st]++;
-      // hours
-      if(r.check_in && r.check_out){
-        const h = (new Date(r.check_out) - new Date(r.check_in)) / 3600000;
-        rec.hours += (isFinite(h) && h>0) ? h : 0;
-      }
-      rec.count++;
-    }
-    return Object.entries(byEmp).map(([id, agg])=>{
-      const e = empMap.get(id) || { jobID:'-', Name:'-' };
-      return { id, jobID: e.jobID||'-', name: e.Name||e.En_Name||'-', ...agg, hours: +agg.hours.toFixed(2) };
-    }).sort((a,b)=> (a.jobID||'').localeCompare(b.jobID||''));
-  }
-
-  async function load(){
-    const { records, employees } = await listSupervisorAttendanceRange({ from: fromEl.value, to: toEl.value });
-    const map = new Map(employees.map(e=>[e.id, e]));
-    const data = summarize(records, map);
-    rows.innerHTML = data.map(d=>`<tr class="border-t">
-      <td class="p-2 font-mono">${d.jobID}</td><td class="p-2">${d.name}</td>
-      <td class="p-2">${d.P}</td><td class="p-2">${d.AB}</td><td class="p-2">${d.SL}</td>
-      <td class="p-2">${d.AL}</td><td class="p-2">${d.TR}</td><td class="p-2">${d.OFF}</td>
-      <td class="p-2">${d.hours}</td><td class="p-2">${d.count}</td>
-    </tr>`).join('');
-    window.__lastReportData = data;
-  }
-  function toCSV(arr){
-    const header = ['jobID','name','P','AB','SL','AL','TR','OFF','hours','records'];
-    const lines = [header.join(',')];
-    for(const d of arr){ lines.push([d.jobID, d.name, d.P, d.AB, d.SL, d.AL, d.TR, d.OFF, d.hours, d.count].join(',')); }
-    return lines.join('\n');
-  }
-  document.getElementById('apply').addEventListener('click', load);
-  document.getElementById('thisMonth').addEventListener('click', ()=>{ setThisMonth(); load(); });
-  document.getElementById('exportCsv').addEventListener('click', ()=>{
-    const data = window.__lastReportData || [];
-    const csv = toCSV(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `attendance_report_${fromEl.value}_to_${toEl.value}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  });
+  function summarize(records, empMap){ const by={}; for(const r of records){ const id=r.employee_id; by[id]=by[id]||{P:0,AB:0,SL:0,AL:0,TR:0,OFF:0,hours:0,count:0}; const rec=by[id]; const st=r.status||(r.check_in?'P':null); if(st && rec.hasOwnProperty(st)) rec[st]++; if(r.check_in&&r.check_out){ const h=(new Date(r.check_out)-new Date(r.check_in))/3600000; rec.hours += (isFinite(h)&&h>0)?h:0; } rec.count++; }
+    return Object.entries(by).map(([id,a])=>{ const e=empMap.get(id)||{}; return { jobID:e.jobID||'-', name:e.Name||e.En_Name||'-', ...a, hours:+a.hours.toFixed(2) }; }).sort((x,y)=> (x.jobID||'').localeCompare(y.jobID||'')); }
+  async function load(){ const { records, employees } = await listSupervisorAttendanceRange({ from:fromEl.value, to:toEl.value }); const map=new Map(employees.map(e=>[e.id,e])); const data=summarize(records,map);
+    rows.innerHTML=data.map(d=>`<tr class="border-t"><td class="p-2 font-mono">${d.jobID}</td><td class="p-2">${d.name}</td><td class="p-2">${d.P}</td><td class="p-2">${d.AB}</td><td class="p-2">${d.SL}</td><td class="p-2">${d.AL}</td><td class="p-2">${d.TR}</td><td class="p-2">${d.OFF}</td><td class="p-2">${d.hours}</td><td class="p-2">${d.count}</td></tr>`).join(''); window.__lastReportData = data; }
+  document.getElementById('apply').addEventListener('click', load); document.getElementById('thisMonth').addEventListener('click', ()=>{ setThisMonth(); load(); });
+  document.getElementById('exportCsv').addEventListener('click', ()=>{ const arr=window.__lastReportData||[]; const header=['jobID','name','P','AB','SL','AL','TR','OFF','hours','records']; const lines=[header.join(',')];
+    for(const d of arr) lines.push([d.jobID,d.name,d.P,d.AB,d.SL,d.AL,d.TR,d.OFF,d.hours,d.count].join(','));
+    const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`attendance_report_${fromEl.value}_to_${toEl.value}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); });
   load();
 </script>
 </body></html>

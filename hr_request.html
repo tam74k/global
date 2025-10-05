@@ -1,42 +1,63 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
-<title>طلب مستندات HR</title></head>
-<body class="min-h-screen bg-gray-50"><div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
-<nav class="bg-white shadow-sm"><div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"><div class="flex items-center gap-3"><h1 class="text-sm font-bold" data-company-ar></h1></div><div class="flex items-center gap-4 text-sm"><a href="employee_home.html" class="text-blue-700">الرجوع</a></div></div></nav>
-<main class="max-w-4xl mx-auto p-4"><h2 class="text-xl font-bold mb-4">طلب مستندات HR</h2>
-<form id="hrForm" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div class="md:col-span-2">
-    <label class="text-sm font-bold mb-2 block">اختر المستندات المطلوبة</label>
-    <div class="grid sm:grid-cols-2 gap-2">
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Insurance Card"><span>Insurance Card</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="ID Card"><span>ID Card</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Employment Certificate"><span>Employment Certificate</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Salary Certificate"><span>Salary Certificate</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Salary Transfer Letter"><span>Salary Transfer Letter</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Salary Pay Slip"><span>Salary Pay Slip</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Experience Certificate"><span>Experience Certificate</span></label>
-      <label class="inline-flex items-center gap-2"><input type="checkbox" value="Others"><span>Others</span></label>
+<!doctype html><html lang='ar' dir='rtl'><head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+
+<script type="module" src="./js/config.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
+    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
+    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
+    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
+    const logo = document.getElementById('companyLogo');
+    const fb = document.getElementById('logoFallback');
+    if (logo && window.COMPANY_LOGO_URL){
+      logo.src = window.COMPANY_LOGO_URL;
+      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
+      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
+    } else if (fb) {
+      fb.classList.remove('hidden');
+    }
+  }catch(e){}
+});
+</script>
+<title>طلب مستندات HR</title></head><body class='min-h-screen bg-gray-50'>
+<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+
+<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
+      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
     </div>
+    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
   </div>
-  <div class="md:col-span-2"><label class="text-sm">اذكر مستندات أخرى (إن وُجدت)</label><input id="others" class="w-full border rounded-lg px-3 py-2"></div>
-  <div><label class="text-sm">موجّه إلى</label><input id="addressed_to" class="w-full border rounded-lg px-3 py-2"></div>
-  <div><label class="text-sm">الغرض</label><input id="purpose" class="w-full border rounded-lg px-3 py-2"></div>
-  <div class="md:col-span-2"><button class="w-full bg-green-600 text-white rounded-lg py-2">إرسال الطلب</button></div>
-</form></main>
+  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
+</div></nav>
+<main class="max-w-3xl mx-auto p-4">
+  <h2 class="text-xl font-bold mb-4">طلب مستندات HR</h2>
+  <form id="f" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 gap-4">
+    <div><label class="block text-sm mb-1">نوع الطلب</label><input id="request_type" class="w-full border rounded-lg px-3 py-2"></div>
+<div><label class="block text-sm mb-1">تفاصيل</label><input id="details" class="w-full border rounded-lg px-3 py-2"></div>
+    <button class="w-full bg-blue-600 text-white rounded-lg py-2">إرسال</button>
+  </form>
+</main>
 <script type="module">
-  import { requireAuth } from './js/auth.js'; import { toast, setCompanyBranding } from './js/ui.js'; import { submitHRRequest } from './js/api.js';
-  setCompanyBranding(); const ctx = await requireAuth(['employee','supervisor']);
-  document.getElementById('hrForm').addEventListener('submit', async (e)=>{ e.preventDefault();
-    const checks = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
-    const payload = { docs: checks, others: document.getElementById('others').value.trim()||null, addressed_to: document.getElementById('addressed_to').value.trim()||null, purpose: document.getElementById('purpose').value.trim()||null };
-    try{ await submitHRRequest(payload); toast('تم إرسال الطلب'); e.target.reset(); } catch(err){ toast('فشل الإرسال: '+err.message,'error'); }
+  import { requireAuth } from './js/auth.js'; import { setRoleBadge, toast } from './js/ui.js'; import { submitHRRequest } from './js/api.js';
+  const ctx = await requireAuth(['employee','supervisor']); if(!ctx) return; setRoleBadge(ctx.role);
+  document.getElementById('f').addEventListener('submit', async (e)=>{ e.preventDefault();
+    const payload = { request_type: document.getElementById('request_type').value.trim() || null, details: document.getElementById('details').value.trim() || null };
+    try{ await submitHRRequest(payload); toast('تم الإرسال'); e.target.reset(); }catch(err){ toast(err.message,'error'); }
   });
 </script></body></html>

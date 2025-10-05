@@ -1,4 +1,6 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -14,7 +16,7 @@
 <script type="module" src="./js/config.js"></script>
 
 <script>
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   try{
     const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
     const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
@@ -24,15 +26,16 @@
     const fb = document.getElementById('logoFallback');
     if (logo && window.COMPANY_LOGO_URL){
       logo.src = window.COMPANY_LOGO_URL;
-      logo.classList.remove('hidden');
-      if (fb) fb.classList.add('hidden');
+      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
+      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
     } else if (fb) {
       fb.classList.remove('hidden');
     }
   }catch(e){}
-})();
+});
 </script>
-<title>تسجيل</title></head><body class='min-h-screen bg-gray-50'>
+
+<title>تسجيل</title></head><body class="min-h-screen bg-gray-50">
 <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 <div class="min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow p-6 w-full max-w-xl">
