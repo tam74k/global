@@ -1,0 +1,1 @@
+-- SQL schema omitted here for brevity in this minimal zip (add the full script if needed).

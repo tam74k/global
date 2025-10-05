@@ -1,53 +1,30 @@
-<script type="module">
-  import { requireAuth } from './js/auth.js';
-  import { setCompanyBranding } from './js/ui.js';
-  import { setRoleBadge } from './js/ui.js';
 
-  const cards = document.getElementById('cards');
-
-  function render(role){
-    const common = [
-      { href:'my_profile.html', icon:'🧾', title:'بياناتي', sub:'عرض كامل لبياناتي' },
-      { href:'my_attendance.html', icon:'📊', title:'حضوري', sub:'تصفية بين تاريخين (الشهر الحالي افتراضيًا)' },
-      { href:'my_violations.html', icon:'⚠️', title:'مخالفاتي', sub:'المخالفات المسجّلة عليّ' },
-      { href:'leave_request.html', icon:'🗓️', title:'طلب إجازة', sub:'إرسال طلب إجازة' },
-      { href:'permission_request.html', icon:'⏱️', title:'طلب إذن', sub:'ساعات/خروج مؤقت' },
-      { href:'hr_request.html', icon:'📄', title:'طلب مستندات HR', sub:'شهادات/خطابات' }
-    ];
-    const employeeOnly = [
-      { href:'evaluate_supervisor.html', icon:'⭐', title:'تقييمي لمشرفي', sub:'مرة كل شهر' }
-    ];
-    const supervisorOnly = [
-      { href:'attendance_register.html', icon:'🕒', title:'الحضور/الانصراف', sub:'يدوي + QR' },
-      { href:'violations.html', icon:'⚠️', title:'تسجيل مخالفة', sub:'GSSG-NAT 300-004' },
-      { href:'evaluate_employees.html', icon:'⭐', title:'تقييم الموظفين', sub:'شهري' },
-      { href:'attendance_report.html', icon:'📈', title:'تقارير الحضور', sub:'تجميعي + CSV' },
-      { href:'violations_list.html', icon:'📝', title:'سجل الإنذارات', sub:'تصفية/طباعة/CSV' }
-    ];
-
-    const list = role === 'supervisor' ? [...supervisorOnly, ...common] : [...employeeOnly, ...common];
-    cards.innerHTML = list.map(i => `
-      <a href="${i.href}" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring">
-        <span class="text-xl">${i.icon}</span>
-        <div><p class="font-bold">${i.title}</p><p class="text-sm text-gray-500">${i.sub}</p></div>
-      </a>`).join('');
-  }
-
-  async function boot(){
-    setCompanyBranding();
-    const ctx = await requireAuth(['employee','supervisor']);
-    const role = ctx?.role || 'employee';
-    setRoleBadge(role);
-    render(role);
-
-    document.getElementById('logout')?.addEventListener('click', async (e)=>{
-      e.preventDefault();
-      (await import('./js/auth.js')).supabase.auth.signOut();
-      location.href = 'index.html';
-    });
-  }
-
-  // نضمن إعادة التهيئة بعد الرجوع للخلف (bfcache)
-  window.addEventListener('pageshow', boot);
-  boot();
-</script>
+import { SUPABASE_URL, SUPABASE_ANON } from './config.js';
+export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+export function goto(path){ window.location.href = path; }
+export function normRole(v){ return (v||'').toString().trim().toLowerCase(); }
+export async function getUserRow(uid){
+  const { data, error } = await supabase.from('users').select('*').eq('id', uid).maybeSingle();
+  if (error) throw error; return data;
+}
+export async function detectRole(userRow){
+  const r = normRole(userRow?.Roll);
+  if (r === 'supervisor') return 'supervisor';
+  try{
+    const { data: me } = await supabase.from('users').select('jobID').eq('id', userRow.id).maybeSingle();
+    if (me?.jobID){
+      const { count } = await supabase.from('users').select('id',{count:'exact',head:true}).eq('SupervisorCode', me.jobID);
+      if ((count||0) > 0) return 'supervisor';
+    }
+  }catch{}
+  return 'employee';
+}
+export async function requireAuth(allowed=['employee','supervisor']){
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session){ goto('index.html'); return null; }
+  const userRow = await getUserRow(session.user.id);
+  if (!userRow){ await supabase.auth.signOut(); goto('index.html'); return null; }
+  const role = await detectRole(userRow);
+  if (!allowed.map(normRole).includes(role)){ goto('dashboard.html'); return null; }
+  return { session, userRow, role };
+}
