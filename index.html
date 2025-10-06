@@ -12,8 +12,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-  <!-- إعدادات الشركة والشعار -->
+  <!-- إعدادات الشركة -->
   <script type="module" src="./js/config.js"></script>
+
+  <!-- تعيين رابط الشعار مباشرة هنا -->
+  <script>
+    window.COMPANY_LOGO_URL = "https://tam74k.github.io/global/Logo1.png";
+    // نحفظه أيضًا لثبات الإعداد عبر الصفحات
+    try { localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL); } catch(e){}
+  </script>
+
+  <!-- تحميل منطق إظهار الشعار بعد ضبط الرابط -->
   <script type="module" src="./js/brand.js"></script>
 
   <title>تسجيل الدخول | GSSG</title>
@@ -74,7 +83,6 @@
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        // رسائل عربية مفهومة
         let msg = error.message || 'فشل تسجيل الدخول';
         if (msg.toLowerCase().includes('invalid login')) {
           msg = 'بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.';
