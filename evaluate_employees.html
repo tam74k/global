@@ -99,18 +99,21 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from './js/auth.js';
-    import { setRoleBadge, toast } from './js/ui.js';
-    import {
-      listEmployeesForSupervisor,
-      existingSupervisorEvals,
-      submitSupervisorEval,
-      periodFromMonthYear
-    } from './js/api.js';
+  import { requireAuth } from './js/auth.js';
+  import { setRoleBadge, toast } from './js/ui.js';
+  import {
+    listEmployeesForSupervisor,
+    existingSupervisorEvals,
+    submitSupervisorEval,
+    periodFromMonthYear
+  } from './js/api.js';
 
-    // السماح للمشرف فقط
+  async function boot() {
     const ctx = await requireAuth(['supervisor']);
-    if (!ctx) return;
+    if (!ctx) {
+      // requireAuth سيتكفل بإعادة التوجيه إن لم يكن هناك جلسة
+      return;
+    }
     setRoleBadge(ctx.role);
 
     // عناصر DOM
@@ -134,14 +137,12 @@
       const q = (qEl.value || '').trim().toLowerCase();
       let list = [...allEmployees];
 
-      // فلترة بالبحث
       if (q) list = list.filter(e =>
         (e.jobID || '').toLowerCase().includes(q) ||
         (e.Name || '').toLowerCase().includes(q) ||
         (e.En_Name || '').toLowerCase().includes(q)
       );
 
-      // افتراضيًا، اعرض غير المُقيّمين فقط
       if (!showAll) list = list.filter(e => !alreadySet.has(e.id));
 
       if (list.length === 0) {
@@ -180,8 +181,13 @@
       if (!m || !y) return toast('اختر الشهر والسنة', 'error');
 
       const period = periodFromMonthYear(m, y);
+
       // 1) موظفو المشرف
       allEmployees = await listEmployeesForSupervisor();
+      if (!allEmployees.length) {
+        toast('لا يوجد مرؤوسون مرتبطون بك (تحقق من SupervisorId للموظفين مقابل jobID لديك).', 'error');
+      }
+
       // 2) من تم تقييمهم بالفعل
       alreadySet = await existingSupervisorEvals(period);
 
@@ -190,7 +196,6 @@
       render();
     }
 
-    // حفظ صف واحد
     async function saveRow(tr) {
       const id = tr.getAttribute('data-id');
       const scoreEl = tr.querySelector('.score');
@@ -212,29 +217,33 @@
         await submitSupervisorEval({ employee_id: id, score, notes, period });
         toast('تم حفظ التقييم');
         alreadySet.add(id);
-        // تعطيل الصف
-        tr.classList.add('opacity-50', 'pointer-events-none');
-        // لو نعتمد إخفاء المُقيّمين، أعد الرسم
+        tr.classList.add('opacity-50','pointer-events-none');
         if (!showAll) render();
       } catch (e) {
         toast(e.message || 'تعذر الحفظ', 'error');
       }
     }
 
-    // أحداث
     document.getElementById('apply').addEventListener('click', load);
     qEl.addEventListener('input', render);
-    showAllBtn.addEventListener('click', () => { showAll = !showAll; showAllBtn.textContent = showAll ? 'إظهار غير المُقيّمين فقط' : 'عرض الكل'; render(); });
-
-    rows.addEventListener('click', (e) => {
+    showAllBtn.addEventListener('click', () => {
+      showAll = !showAll;
+      showAllBtn.textContent = showAll ? 'إظهار غير المُقيّمين فقط' : 'عرض الكل';
+      render();
+    });
+    document.getElementById('rows').addEventListener('click', (e) => {
       const btn = e.target.closest('.save');
       if (!btn) return;
-      const tr = btn.closest('tr');
-      saveRow(tr);
+      saveRow(btn.closest('tr'));
     });
 
     // تحميل أولي
     load();
-  </script>
+  }
+
+  // شغّل
+  boot();
+</script>
+
 </body>
 </html>
