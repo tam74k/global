@@ -1,24 +1,225 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind + Supabase -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- خط Cairo -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans",sans-serif}</style>
-<title>لوحة المشرف</title></head><body class='min-h-screen bg-gray-50'>
-<div id='toast-holder' class='fixed top-4 right-4 z-50'></div>
-<nav class='bg-white shadow-sm'><div class='max-w-6xl mx-auto px-4 py-3 flex items-center justify-between'>
-  <div class='flex items-center gap-3'><h1 class='text-sm font-bold' data-company-ar></h1><p class='text-xs text-gray-500' data-company-en></p></div>
-  <a href='index.html' id='logout' class='text-red-600'>خروج</a>
-</div></nav>
-<main class='max-w-6xl mx-auto p-4'><h2 class='text-xl font-bold mb-4'>مرحبًا بك يا مشرف</h2>
-<div class='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-  <a href='attendance_scan.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>📷</span><div><p class='font-bold'>مسح حضور/انصراف</p><p class='text-sm text-gray-500'>QR متتابع</p></div></a>
-  <a href='violations.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>⚠️</span><div><p class='font-bold'>تسجيل مخالفة</p><p class='text-sm text-gray-500'>GSSG-NAT 300-004</p></div></a>
-  <a href='evaluate_employees.html' class='bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring'><span>⭐</span><div><p class='font-bold'>تقييم الموظفين</p><p class='text-sm text-gray-500'>شهري</p></div></a>
-</div></main>
-<script type='module'>import { requireAuth } from './js/auth.js'; import { setCompanyBranding } from './js/ui.js'; setCompanyBranding(); const ctx = await requireAuth(['supervisor']); document.getElementById('logout').addEventListener('click', async (e)=>{ e.preventDefault(); (await import('./js/auth.js')).supabase.auth.signOut(); location.href='index.html'; });</script>
-</body></html>
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
+
+  <title>الرئيسية (المشرف) | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+
+  <!-- الشريط العلوي -->
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
+        <a href="dashboard.html" class="text-blue-700 hover:underline">الواجهة العامة</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4">
+    <!-- معلومات المشرف -->
+    <section class="bg-white rounded-2xl shadow p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="text-xs text-gray-500">مرحبًا</div>
+          <div class="font-bold text-lg" id="supName">—</div>
+          <div class="text-sm text-gray-600">الكود الوظيفي: <span id="supJob">—</span></div>
+        </div>
+        <div class="text-sm text-gray-600">
+          إجمالي المرؤوسين: <span id="teamCount" class="font-bold">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- أزرار المهام الأساسية للمشرف -->
+    <section class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <a href="attendance_register.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">🕒</span><div><p class="font-bold">تسجيل الحضور/الانصراف</p><p class="text-sm text-gray-500">يدوي + QR</p></div>
+      </a>
+      <a href="attendance_report.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">📈</span><div><p class="font-bold">تقارير الحضور</p><p class="text-sm text-gray-500">تجميعي + تصدير</p></div>
+      </a>
+      <a href="violations.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">⚠️</span><div><p class="font-bold">تسجيل مخالفة</p><p class="text-sm text-gray-500">مطابق للنموذج</p></div>
+      </a>
+      <a href="violations_list.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">📝</span><div><p class="font-bold">سجل الإنذارات</p><p class="text-sm text-gray-500">تصفية/طباعة/CSV</p></div>
+      </a>
+      <a href="evaluate_employees.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">⭐</span><div><p class="font-bold">تقييم الموظفين</p><p class="text-sm text-gray-500">تقييم شهري</p></div>
+      </a>
+      <a href="my_profile.html" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+        <span class="text-xl">🧾</span><div><p class="font-bold">بياناتي</p><p class="text-sm text-gray-500">عرض صف الحساب</p></div>
+      </a>
+    </section>
+
+    <!-- ملخص سريع لليوم -->
+    <section class="bg-white rounded-2xl shadow p-4 mb-6">
+      <h3 class="font-bold mb-3">ملخص اليوم لفريقك</h3>
+      <div class="grid sm:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">P حاضر</div><div id="cntP" class="font-bold text-lg">0</div></div>
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">AB غائب</div><div id="cntAB" class="font-bold text-lg">0</div></div>
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">SL مرضية</div><div id="cntSL" class="font-bold text-lg">0</div></div>
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">AL سنوية</div><div id="cntAL" class="font-bold text-lg">0</div></div>
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">TR خدمة وطنية</div><div id="cntTR" class="font-bold text-lg">0</div></div>
+        <div class="rounded-xl border p-3"><div class="text-xs text-gray-500">OFF عطلة</div><div id="cntOFF" class="font-bold text-lg">0</div></div>
+      </div>
+      <p class="text-xs text-gray-500 mt-3">
+        ملاحظة: إذا كان اليوم بلا حالة ولكن مسجل دخول/خروج فسيُحتسب تلقائيًا كـ P (حاضر).
+      </p>
+    </section>
+
+    <!-- حالة تقييم هذا الشهر -->
+    <section class="bg-white rounded-2xl shadow p-4">
+      <div class="flex flex-wrap items-end gap-3 mb-3">
+        <div>
+          <label class="text-sm">الشهر</label>
+          <select id="month" class="w-36 border rounded px-3 py-2">
+            <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+            <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+            <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm">السنة</label>
+          <input id="year" type="number" class="w-28 border rounded px-3 py-2" min="2000" max="2100">
+        </div>
+        <button id="refreshEval" class="px-4 py-2 bg-blue-600 text-white rounded">تحديث</button>
+        <div class="text-sm text-gray-700">متبقّي للتقييم: <span id="leftToEval" class="font-bold">0</span></div>
+        <a href="evaluate_employees.html" class="text-blue-700 text-sm hover:underline">الانتقال لصفحة التقييم</a>
+      </div>
+      <div id="evalList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm"></div>
+    </section>
+  </main>
+
+  <!-- دليل الحالات (ثابت) -->
+  <footer class="mt-8 pb-6">
+    <div class="max-w-7xl mx-auto text-xs sm:text-sm text-gray-600 px-4">
+      <span class="font-bold">دليل الحالات:</span>
+      <span class="mx-2">P = حاضر</span>
+      <span class="mx-2">AB = غائب</span>
+      <span class="mx-2">SL = إجازة مرضية</span>
+      <span class="mx-2">AL = إجازة سنوية</span>
+      <span class="mx-2">TR = الخدمة الوطنية</span>
+      <span class="mx-2">OFF = عطلة أسبوعية</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { setRoleBadge, toast } from './js/ui.js';
+    import {
+      listEmployeesForSupervisor,
+      existingSupervisorEvals,
+      listSupervisorAttendanceRange,
+      periodFromMonthYear
+    } from './js/api.js';
+
+    // مسموح للمشرف فقط
+    const ctx = await requireAuth(['supervisor']);
+    if (!ctx) return;
+    setRoleBadge(ctx.role);
+
+    // بيانات المشرف
+    document.getElementById('supName').textContent = ctx.userRow?.Name || ctx.userRow?.En_Name || '—';
+    document.getElementById('supJob').textContent  = ctx.userRow?.jobID || '—';
+
+    // تحميل المرؤوسين
+    let employees = await listEmployeesForSupervisor();
+    document.getElementById('teamCount').textContent = (employees || []).length;
+
+    // ملخص اليوم
+    async function loadTodaySummary() {
+      const today = new Date().toISOString().slice(0,10);
+      const { records } = await listSupervisorAttendanceRange({ from: today, to: today });
+      const counters = { P:0, AB:0, SL:0, AL:0, TR:0, OFF:0 };
+
+      for (const r of (records || [])) {
+        const st = r.status || (r.check_in ? 'P' : null);
+        if (st && counters.hasOwnProperty(st)) counters[st] += 1;
+      }
+
+      document.getElementById('cntP').textContent   = counters.P;
+      document.getElementById('cntAB').textContent  = counters.AB;
+      document.getElementById('cntSL').textContent  = counters.SL;
+      document.getElementById('cntAL').textContent  = counters.AL;
+      document.getElementById('cntTR').textContent  = counters.TR;
+      document.getElementById('cntOFF').textContent = counters.OFF;
+    }
+
+    // حالة التقييم الشهري
+    const monthEl = document.getElementById('month');
+    const yearEl  = document.getElementById('year');
+    const leftEl  = document.getElementById('leftToEval');
+    const listEl  = document.getElementById('evalList');
+
+    const now = new Date();
+    monthEl.value = String(now.getMonth()+1);
+    yearEl.value  = String(now.getFullYear());
+
+    async function loadEvalStatus() {
+      try {
+        const period = periodFromMonthYear(monthEl.value, yearEl.value);
+        const doneSet = await existingSupervisorEvals(period);
+        const pending = (employees || []).filter(e => !doneSet.has(e.id));
+        leftEl.textContent = pending.length;
+
+        if (pending.length === 0) {
+          listEl.innerHTML = `<div class="text-gray-500">لا يوجد موظفون بحاجة للتقييم في هذه الفترة.</div>`;
+        } else {
+          listEl.innerHTML = pending.slice(0,9).map(e => `
+            <div class="rounded-xl border p-3 flex items-center justify-between gap-3">
+              <div>
+                <div class="font-bold">${e.Name || e.En_Name || '-'}</div>
+                <div class="text-xs text-gray-500 font-mono">${e.jobID || '-'}</div>
+              </div>
+              <a href="evaluate_employees.html" class="text-blue-700 text-sm hover:underline">تقييم</a>
+            </div>
+          `).join('') + (pending.length > 9 ? `<div class="text-xs text-gray-500">+ ${pending.length-9} أخرى</div>` : '');
+        }
+      } catch (e) {
+        toast(e.message || 'تعذر تحميل حالة التقييم', 'error');
+      }
+    }
+
+    document.getElementById('refreshEval').addEventListener('click', loadEvalStatus);
+
+    // تشغيل أولي
+    await loadTodaySummary();
+    await loadEvalStatus();
+
+    // عند الرجوع من صفحات أخرى (history back)
+    window.addEventListener('pageshow', async () => { await loadTodaySummary(); await loadEvalStatus(); });
+  </script>
+</body>
+</html>
