@@ -12,8 +12,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-  <!-- إعدادات الشركة والشعار -->
+  <!-- إعدادات الشركة -->
   <script type="module" src="./js/config.js"></script>
+
+  <!-- تثبيت رابط الشعار مباشرة -->
+  <script>
+    window.COMPANY_LOGO_URL = "https://tam74k.github.io/global/Logo1.png";
+    try { localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL); } catch(e){}
+  </script>
+
+  <!-- تشغيل الـ branding بعد ضبط الرابط -->
   <script type="module" src="./js/brand.js"></script>
 
   <title>طلب إجازة | GSSG</title>
@@ -22,12 +30,12 @@
   <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
   <nav class="bg-white shadow-sm">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
           <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
                class="w-full h-full object-contain hidden" alt="logo">
-          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
           </svg>
@@ -38,31 +46,180 @@
         </div>
       </div>
       <div class="flex items-center gap-4 text-sm">
-        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
         <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
       </div>
     </div>
   </nav>
 
-  <main class="max-w-3xl mx-auto p-4">
-    <h2 class="text-xl font-bold mb-4">طلب إجازة</h2>
+  <main class="max-w-4xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">نموذج طلب إجازة (GSSG-HR 300-003)</h2>
 
-    <form id="f" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 gap-4">
-      <div class="grid sm:grid-cols-2 gap-3">
+    <form id="leaveForm" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 gap-6">
+      <!-- رأس النموذج -->
+      <section class="grid sm:grid-cols-3 gap-3">
         <div>
-          <label class="block text-sm mb-1">من تاريخ</label>
-          <input id="from_date" type="date" class="w-full border rounded-lg px-3 py-2" required>
+          <label class="block text-sm mb-1">تاريخ الطلب</label>
+          <input id="request_date" type="date" class="w-full border rounded-lg px-3 py-2" required>
         </div>
         <div>
-          <label class="block text-sm mb-1">إلى تاريخ</label>
-          <input id="to_date" type="date" class="w-full border rounded-lg px-3 py-2" required>
+          <label class="block text-sm mb-1">اسم الموظف</label>
+          <input id="emp_name" class="w-full border rounded-lg px-3 py-2" readonly>
         </div>
-      </div>
+        <div>
+          <label class="block text-sm mb-1">الرقم الوظيفي (Employee ID)</label>
+          <input id="emp_id" class="w-full border rounded-lg px-3 py-2 font-mono" readonly>
+        </div>
 
-      <div>
-        <label class="block text-sm mb-1">السبب</label>
-        <input id="reason" class="w-full border rounded-lg px-3 py-2" placeholder="سبب الإجازة" required>
-      </div>
+        <div>
+          <label class="block text-sm mb-1">المسمى الوظيفي (Designation)</label>
+          <input id="designation" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">تاريخ الانضمام (Date of Join)</label>
+          <input id="joining_date" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">المشروع / الموقع (Project / Location)</label>
+          <input id="project_location" class="w-full border rounded-lg px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">رقم التواصل (الإمارات)</label>
+          <input id="contact_uae" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">رقم التواصل (بلد الإقامة)</label>
+          <input id="contact_home" class="w-full border rounded-lg px-3 py-2">
+        </div>
+      </section>
+
+      <!-- بطاقة PSFRD (للاستخدام التشغيلي) -->
+      <section class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm mb-1">PSFRD Card Issue Date</label>
+          <input id="psfrd_issue" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">PSFRD Card Expiry Date</label>
+          <input id="psfrd_expiry" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+      </section>
+
+      <!-- تفاصيل الإجازة -->
+      <section>
+        <label class="block text-sm font-bold mb-2">نوع الإجازة (Leave Details)</label>
+        <div class="grid sm:grid-cols-3 gap-2 text-sm">
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Annual"> Annual Leave</label>
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Sick"> Sick Leave</label>
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Compassionate"> Compassionate Leave</label>
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Duty"> Duty Leave</label>
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Emergency"> Emergency Leave</label>
+          <label class="flex items-center gap-2"><input type="radio" name="leave_type" value="Hajj"> Hajj Leave</label>
+          <label class="sm:col-span-3 flex items-center gap-2">
+            <input type="radio" name="leave_type" value="Others">
+            Others (Please Specify)
+            <input id="other_leave_text" class="flex-1 border rounded px-2 py-1" placeholder="اكتب النوع">
+          </label>
+        </div>
+
+        <div class="grid sm:grid-cols-4 gap-3 mt-3">
+          <div>
+            <label class="block text-sm mb-1">أول يوم إجازة</label>
+            <input id="from_date" type="date" class="w-full border rounded-lg px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">آخر يوم إجازة</label>
+            <input id="to_date" type="date" class="w-full border rounded-lg px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block text-sm mb-1">إجمالي الأيام</label>
+            <input id="total_days" type="number" class="w-full border rounded-lg px-3 py-2" readonly>
+          </div>
+        </div>
+      </section>
+
+      <!-- تذكرة الشركة / الجواز -->
+      <section class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm mb-1">Company Ticket</label>
+          <select id="company_ticket" class="w-full border rounded-lg px-3 py-2">
+            <option value="">—</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Passport Release</label>
+          <select id="passport_release" class="w-full border rounded-lg px-3 py-2">
+            <option value="">—</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm mb-1">Ticket Start Date</label>
+          <input id="ticket_start_date" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Ticket Return Date</label>
+          <input id="ticket_return_date" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">اسم المطار (Airport Name)</label>
+          <input id="airport_name" class="w-full border rounded-lg px-3 py-2">
+        </div>
+      </section>
+
+      <!-- لقسم الرواتب -->
+      <section class="rounded-xl border p-3">
+        <div class="font-bold mb-2 text-sm">For Payroll Section Use Only</div>
+        <div class="grid sm:grid-cols-3 gap-3 text-sm">
+          <div>
+            <label class="block mb-1">Employment Type</label>
+            <select id="employment_type" class="w-full border rounded px-2 py-1">
+              <option value="">—</option>
+              <option value="Permanent">Permanent</option>
+              <option value="Project">Project</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Balance before leave</label>
+            <input id="balance_before_leave" type="number" step="0.5" class="w-full border rounded px-2 py-1">
+          </div>
+          <div>
+            <label class="block mb-1">During Probation?</label>
+            <select id="probation_leave" class="w-full border rounded px-2 py-1">
+              <option value="">—</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block mb-1">Paid Leave</label>
+            <select id="paid_leave" class="w-full border rounded px-2 py-1">
+              <option value="">—</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Leave Without Pay</label>
+            <select id="leave_without_pay" class="w-full border rounded px-2 py-1">
+              <option value="">—</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block mb-1">Remarks (Action for Payroll)</label>
+            <textarea id="payroll_remarks" rows="2" class="w-full border rounded px-2 py-1"></textarea>
+          </div>
+        </div>
+      </section>
 
       <button class="w-full bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg py-2">
         إرسال الطلب
@@ -71,42 +228,109 @@
   </main>
 
   <script type="module">
-    import { requireAuth } from './js/auth.js';
-    import { setRoleBadge, toast } from './js/ui.js';
-    import { submitLeaveRequest } from './js/api.js';
+    import { requireAuth, supabase } from './js/auth.js';
+    import { toast } from './js/ui.js';
 
     const ctx = await requireAuth(['employee','supervisor']);
     if (!ctx) return;
-    setRoleBadge(ctx.role);
 
-    // افتراضي: من اليوم إلى اليوم نفسه
+    // تعبئة بيانات الموظف
+    const u = ctx.userRow || {};
+    document.getElementById('request_date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('emp_name').value = u.Name || u.En_Name || '';
+    document.getElementById('emp_id').value   = u.jobID || '';
+    document.getElementById('designation').value = u.POS2 || '';
+    document.getElementById('project_location').value = u.location || '';
+    document.getElementById('contact_uae').value = u.mobile || '';
+    // joining_date: لو لديك حقل مخصص عدّله هنا (مبدئيًا فارغ)
+
+    // حساب إجمالي الأيام تلقائيًا
     const fromEl = document.getElementById('from_date');
     const toEl   = document.getElementById('to_date');
-    const today  = new Date().toISOString().slice(0,10);
-    fromEl.value = today; toEl.value = today;
+    const daysEl = document.getElementById('total_days');
+    function recomputeDays(){
+      const a = fromEl.value, b = toEl.value;
+      if (a && b) {
+        const da = new Date(a), db = new Date(b);
+        const diff = Math.round((db - da) / 86400000) + 1;
+        daysEl.value = Number.isFinite(diff) && diff > 0 ? diff : '';
+      } else {
+        daysEl.value = '';
+      }
+    }
+    fromEl.addEventListener('change', recomputeDays);
+    toEl.addEventListener('change', recomputeDays);
 
-    document.getElementById('f').addEventListener('submit', async (e) => {
+    // إرسال
+    document.getElementById('leaveForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      // نوع الإجازة
+      const lt = Array.from(document.querySelectorAll('input[name="leave_type"]'))
+                      .find(r => r.checked)?.value || null;
+      const otherTxt = (document.getElementById('other_leave_text').value || '').trim() || null;
+
+      if (!lt) return toast('اختر نوع الإجازة', 'error');
+      if (lt === 'Others' && !otherTxt) return toast('اكتب نوع الإجازة في خانة Others', 'error');
+
+      if (!fromEl.value || !toEl.value) return toast('حدد فترة الإجازة', 'error');
+
       const payload = {
-        from_date: fromEl.value || null,
-        to_date:   toEl.value   || null,
-        reason:    (document.getElementById('reason').value || '').trim() || null
+        employee_id: ctx.session.user.id,
+        // رأس النموذج
+        request_date: document.getElementById('request_date').value || null,
+        designation:  (document.getElementById('designation').value || '').trim() || null,
+        joining_date: document.getElementById('joining_date').value || null,
+        project_location: (document.getElementById('project_location').value || '').trim() || null,
+        contact_uae: (document.getElementById('contact_uae').value || '').trim() || null,
+        contact_home:(document.getElementById('contact_home').value || '').trim() || null,
+
+        // PSFRD
+        psfrd_issue_date:  document.getElementById('psfrd_issue').value || null,
+        psfrd_expiry_date: document.getElementById('psfrd_expiry').value || null,
+
+        // تفاصيل الإجازة
+        leave_type: lt,
+        other_leave_text: otherTxt,
+        from_date: fromEl.value,
+        to_date:   toEl.value,
+        total_days: daysEl.value ? parseInt(daysEl.value,10) : null,
+
+        // التذكرة والجواز
+        company_ticket: document.getElementById('company_ticket').value === 'true' ? true
+                       : document.getElementById('company_ticket').value === 'false' ? false : null,
+        passport_release: document.getElementById('passport_release').value === 'true' ? true
+                       : document.getElementById('passport_release').value === 'false' ? false : null,
+        ticket_start_date:  document.getElementById('ticket_start_date').value || null,
+        ticket_return_date: document.getElementById('ticket_return_date').value || null,
+        airport_name: (document.getElementById('airport_name').value || '').trim() || null,
+
+        // قسم الرواتب
+        employment_type: document.getElementById('employment_type').value || null,
+        balance_before_leave: document.getElementById('balance_before_leave').value
+                              ? Number(document.getElementById('balance_before_leave').value)
+                              : null,
+        probation_leave: document.getElementById('probation_leave').value === 'true' ? true
+                         : document.getElementById('probation_leave').value === 'false' ? false : null,
+        paid_leave: document.getElementById('paid_leave').value === 'true' ? true
+                    : document.getElementById('paid_leave').value === 'false' ? false : null,
+        leave_without_pay: document.getElementById('leave_without_pay').value === 'true' ? true
+                    : document.getElementById('leave_without_pay').value === 'false' ? false : null,
+        payroll_remarks: (document.getElementById('payroll_remarks').value || '').trim() || null,
+
+        // حقل سبب عام (للتوافق السابق – يمكن تركه فارغًا)
+        reason: null
       };
 
-      if (!payload.from_date || !payload.to_date || !payload.reason) {
-        return toast('برجاء استكمال جميع الحقول', 'error');
-      }
-      if (payload.from_date > payload.to_date) {
-        return toast('تاريخ البداية يجب أن يسبق تاريخ النهاية', 'error');
-      }
-
       try {
-        await submitLeaveRequest(payload);
+        // إدراج مباشر (الصفحة متقدمة عن دالة API القديمة)
+        const { error } = await supabase.from('leave_requests').insert(payload);
+        if (error) throw error;
+
         toast('تم إرسال طلب الإجازة بنجاح');
         e.target.reset();
-        fromEl.value = today;
-        toEl.value   = today;
+        document.getElementById('request_date').value = new Date().toISOString().slice(0,10);
+        recomputeDays();
       } catch (err) {
         toast(err.message || 'تعذر إرسال الطلب', 'error');
       }
