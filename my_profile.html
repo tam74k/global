@@ -12,8 +12,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-  <!-- إعدادات الشركة والشعار -->
+  <!-- إعدادات الشركة -->
   <script type="module" src="./js/config.js"></script>
+
+  <!-- تثبيت رابط الشعار مباشرة هنا -->
+  <script>
+    window.COMPANY_LOGO_URL = "https://tam74k.github.io/global/Logo1.png";
+    try { localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL); } catch(e){}
+  </script>
+
+  <!-- تشغيل الـ branding بعد ضبط الرابط -->
   <script type="module" src="./js/brand.js"></script>
 
   <title>بياناتي | GSSG</title>
@@ -25,11 +33,13 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <!-- نخلي fallback ظاهر افتراضيًا، والصورة تظهر بعد التحميل -->
           <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
                class="w-full h-full object-contain hidden" alt="logo">
-          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- (إصلاح مسار الأيقونة: حروف لاتينية صحيحة) -->
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 7ل9-4 9 4-9 4-9-4zM3 7v10ل9 4 9-4V7" />
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
           </svg>
         </div>
         <div>
@@ -53,7 +63,10 @@
     </section>
 
     <section class="bg-white rounded-2xl shadow p-4">
-      <div id="profile" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+      <div id="profile" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- سيتم ملؤه بالـ JS -->
+      </div>
+      <div id="err" class="mt-4 text-red-600 text-sm hidden"></div>
     </section>
   </main>
 
@@ -61,35 +74,59 @@
     import { requireAuth } from './js/auth.js';
     import { setRoleBadge } from './js/ui.js';
 
-    const ctx = await requireAuth(['employee','supervisor']);
-    if (!ctx) return;
+    const errBox = document.getElementById('err');
 
-    setRoleBadge(ctx.role);
+    function showError(msg) {
+      errBox.textContent = msg || 'حدث خطأ غير متوقع.';
+      errBox.classList.remove('hidden');
+    }
 
-    const u = ctx.userRow;
-    document.getElementById('nameRow').textContent = u?.Name || u?.En_Name || '—';
-    document.getElementById('jobRow').textContent  = 'الكود الوظيفي: ' + (u?.jobID || '—');
+    try {
+      const ctx = await requireAuth(['employee','supervisor']);
+      if (!ctx) {
+        // تم تحويله لصفحة الدخول بواسطة requireAuth
+        // لا نفعل شيئًا هنا
+      } else {
+        // شارة الدور
+        setRoleBadge(ctx.role || 'employee');
 
-    // تسميات عربية لحقل users بالكامل (حسب جدولك)
-    const labels = {
-      id:'UUID', created_at:'تاريخ الإنشاء', email:'البريد', mobile:'الموبايل',
-      jobID:'الكود الوظيفي', Name:'الاسم', En_Name:'الاسم (EN)',
-      Active:'نشط', NAT:'الجنسية', POS2:'المسمى', Gun:'سلاح',
-      Mwaten:'مواطن', location:'الموقع', Gendar:'النوع',
-      Start_in_Location:'بداية الموقع', FpCode:'كود البصمة',
-      Civil_Id:'الرقم المدني', B_date:'الميلاد', pic:'الصورة',
-      SupervisorId:'كود المشرف', Roll:'الدور'
-    };
+        const u = ctx.userRow || {};
+        // اسم + كود وظيفي أعلى الصفحة
+        document.getElementById('nameRow').textContent = u.Name || u.En_Name || '—';
+        document.getElementById('jobRow').textContent  = 'الكود الوظيفي: ' + (u.jobID || '—');
 
-    const profile = document.getElementById('profile');
-    const ordered = Object.keys(labels).filter(k => Object.prototype.hasOwnProperty.call(u, k));
+        // تسميات عربية لحقول users
+        const labels = {
+          id:'UUID', created_at:'تاريخ الإنشاء', email:'البريد', mobile:'الموبايل',
+          jobID:'الكود الوظيفي', Name:'الاسم', En_Name:'الاسم (EN)',
+          Active:'نشط', NAT:'الجنسية', POS2:'المسمى', Gun:'سلاح',
+          Mwaten:'مواطن', location:'الموقع', Gendar:'النوع',
+          Start_in_Location:'بداية الموقع', FpCode:'كود البصمة',
+          Civil_Id:'الرقم المدني', B_date:'الميلاد', pic:'الصورة',
+          SupervisorId:'كود المشرف', Roll:'الدور'
+        };
 
-    profile.innerHTML = ordered.map(k => `
-      <div class="rounded-xl border p-3">
-        <div class="text-xs text-gray-500">${labels[k] || k}</div>
-        <div class="font-bold break-words">${u[k] === null || u[k] === undefined ? '—' : u[k]}</div>
-      </div>
-    `).join('');
+        const profile = document.getElementById('profile');
+        const ordered = Object.keys(labels).filter(k => Object.prototype.hasOwnProperty.call(u, k));
+
+        // لو ما فيش ولا حقل، اعرض رسالة بدل ما تبقى الصفحة فاضية
+        if (!ordered.length) {
+          profile.innerHTML = `
+            <div class="text-gray-600">لا توجد بيانات لعرضها من جدول <span class="font-mono">users</span>.</div>
+          `;
+        } else {
+          profile.innerHTML = ordered.map(k => `
+            <div class="rounded-xl border p-3">
+              <div class="text-xs text-gray-500">${labels[k] || k}</div>
+              <div class="font-bold break-words">${u[k] === null || u[k] === undefined ? '—' : u[k]}</div>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      showError(e.message || 'تعذر تحميل بيانات الملف الشخصي.');
+    }
   </script>
 </body>
 </html>
