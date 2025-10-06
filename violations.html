@@ -8,12 +8,20 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- خط Cairo -->
+  <!-- Cairo font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-  <!-- إعدادات الشركة والشعار -->
+  <!-- Project config -->
   <script type="module" src="./js/config.js"></script>
+
+  <!-- تثبيت الشعار مباشرة -->
+  <script>
+    window.COMPANY_LOGO_URL = "https://tam74k.github.io/global/Logo1.png";
+    try { localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL); } catch(e){}
+  </script>
+
+  <!-- Branding -->
   <script type="module" src="./js/brand.js"></script>
 
   <title>تسجيل مخالفة | GSSG</title>
@@ -21,13 +29,14 @@
 <body class="min-h-screen bg-gray-50">
   <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
+  <!-- Header -->
   <nav class="bg-white shadow-sm">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
           <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
                class="w-full h-full object-contain hidden" alt="logo">
-          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
           </svg>
@@ -37,104 +46,184 @@
           <p class="text-xs text-gray-500" data-company-en></p>
         </div>
       </div>
-      <div class="flex items-center gap-4 text-sm">
-        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
-        <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
-      </div>
+      <a href="dashboard.html" class="text-blue-700 text-sm hover:underline">الرجوع</a>
     </div>
   </nav>
 
-  <main class="max-w-4xl mx-auto p-4">
-    <section class="bg-white rounded-2xl shadow p-4 md:p-6 mb-4">
-      <h2 class="text-lg font-bold mb-3">إصدار إنذار جديد (مشرف)</h2>
+  <!-- Body -->
+  <main class="max-w-5xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">Violation Form (GSSG-NAT 300-004)</h2>
 
-      <form id="warnForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm mb-1">كود الموظف (jobID)</label>
-          <input id="jobID" class="w-full border rounded-lg px-3 py-2" placeholder="EMP001" required>
+    <form id="vioForm" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 gap-6">
+      <!-- اختيار الموظف + معلومات عامة -->
+      <section class="grid sm:grid-cols-2 gap-3">
+        <div class="sm:col-span-2">
+          <label class="block text-sm mb-1">ابحث عن الموظف (الاسم / الكود الوظيفي)</label>
+          <input id="empFilter" class="w-full border rounded-lg px-3 py-2" placeholder="ابدأ بالكتابة للبحث...">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm mb-1">الموظف</label>
+          <select id="employee" class="w-full border rounded-lg px-3 py-2" required>
+            <option value="">— اختر الموظف —</option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">تظهر هنا فقط مرؤوسوك (حسب SupervisorId = jobID الخاص بك).</p>
         </div>
 
         <div>
-          <label class="block text-sm mb-1">رمز المخالفة (اختياري)</label>
-          <input id="itemCode" class="w-full border rounded-lg px-3 py-2" placeholder="مثال: C-6">
+          <label class="block text-sm mb-1">التاريخ والوقت</label>
+          <input id="issue_dt" type="datetime-local" class="w-full border rounded-lg px-3 py-2" required>
         </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-sm mb-1">التصنيف (اختياري)</label>
-          <input id="category" class="w-full border rounded-lg px-3 py-2" placeholder="مثال: Attendance / Conduct">
-        </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-sm mb-1">سبب/تفاصيل الإنذار</label>
-          <textarea id="reason" class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="اكتب السبب..."></textarea>
-        </div>
-
         <div>
-          <label class="block text-sm mb-1">الموقع</label>
-          <input id="location" class="w-full border rounded-lg px-3 py-2" placeholder="Site / Location">
+          <label class="block text-sm mb-1">الموقع (Location)</label>
+          <input id="location" class="w-full border rounded-lg px-3 py-2" placeholder="مثال: Abu Dhabi - Gate 3">
         </div>
+      </section>
 
-        <div>
-          <label class="block text-sm mb-1">ملاحظات</label>
-          <input id="remarks" class="w-full border rounded-lg px-3 py-2" placeholder="اختياري">
+      <!-- جدول البنود طبقًا للنموذج -->
+      <section class="rounded-xl border p-3">
+        <div class="font-bold mb-2">Grooming</div>
+        <div class="space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Grooming" data-code="G1" data-title="Inadequate Personal Hygiene (Haircut, failing to shave)"> <span>1 Inadequate Personal Hygiene (Haircut, failing to shave)</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Grooming" data-code="G2" data-title="Improper Uniform – as issued by Company"> <span>2 Improper Uniform – as issued by Company</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Grooming" data-code="G3" data-title="Unkempt or Dirty Uniform"> <span>3 Unkempt or Dirty Uniform</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Grooming" data-code="G4" data-title="Not wearing beret\\cap on duty"> <span>4 Not wearing beret\cap on duty</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Grooming" data-code="G5" data-title="Loss \\ damage Of Equipment"> <span>5 Loss \ damage Of Equipment</span></label>
         </div>
+      </section>
 
-        <div class="md:col-span-2">
-          <button class="w-full bg-red-600 hover:bg-red-700 transition text-white rounded-lg py-2">
-            إصدار إنذار
-          </button>
+      <section class="rounded-xl border p-3">
+        <div class="font-bold mb-2">PSFRD Requirements</div>
+        <div class="space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="PSFRD" data-code="P1" data-title="Fail to have to or to display PSFRD License"> <span>1 Fail to have to or to display PSFRD License</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="PSFRD" data-code="P2" data-title="Fail to have/display Company ID"> <span>2 Fail to have/display Company ID</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="PSFRD" data-code="P3" data-title="Fail to Report Incident \\ Accident"> <span>3 Fail to Report Incident \ Accident</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="PSFRD" data-code="P4" data-title="No Note Books \\ Fail to record in NB"> <span>4 No Note Books \ Fail to record in NB</span></label>
         </div>
-      </form>
-    </section>
+      </section>
+
+      <section class="rounded-xl border p-3">
+        <div class="font-bold mb-2">Conduct</div>
+        <div class="space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C1" data-title="Sleeping on Duty"> <span>1 Sleeping on Duty</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C2" data-title="Leaving post unattended"> <span>2 Leaving post unattended</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C3" data-title="Theft"> <span>3 Theft</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C4" data-title="Disobeying Supervisor Orders"> <span>4 Disobeying Supervisor Orders</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C5" data-title="Reporting under Alcohol: site\\ Accommodation"> <span>5 Reporting under Alcohol: site\ Accommodation</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C6" data-title="Reporting late for Shift"> <span>6 Reporting late for Shift</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C7" data-title="Having alcohol: duty\\ Accommodation"> <span>7 Having alcohol: duty\ Accommodation</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C8" data-title="Failing to report misconduct by another"> <span>8 Failing to report misconduct by another</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C9" data-title="Providing false information to supervisor"> <span>9 Providing false information to supervisor</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C10" data-title="Negligence of duty"> <span>10 Negligence of duty</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C11" data-title="Damaging client property"> <span>11 Damaging client property</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="vio" data-cat="Conduct" data-code="C12" data-title="Absence"> <span>12 Absence</span></label>
+        </div>
+      </section>
+
+      <section>
+        <label class="block text-sm mb-1">Others / Explanation</label>
+        <textarea id="others" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="أكتب أي توضيحات أخرى"></textarea>
+      </section>
+
+      <section>
+        <label class="block text-sm mb-1">Remarks (عام)</label>
+        <textarea id="remarks" rows="2" class="w-full border rounded-lg px-3 py-2" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+      </section>
+
+      <button class="w-full bg-red-600 hover:bg-red-700 transition text-white rounded-lg py-2">
+        حفظ المخالفة
+      </button>
+    </form>
   </main>
 
   <script type="module">
     import { requireAuth } from './js/auth.js';
-    import { setRoleBadge, toast } from './js/ui.js';
-    import { findUserByJobID } from './js/api.js';
+    import { toast } from './js/ui.js';
+    import { listEmployeesForSupervisor } from './js/api.js';
     import { supabase } from './js/auth.js';
 
+    // المشرف فقط
     const ctx = await requireAuth(['supervisor']);
     if (!ctx) return;
-    setRoleBadge(ctx.role);
 
-    async function createViolation(payload) {
-      const { error } = await supabase.from('violations').insert(payload);
-      if (error) throw error;
+    // افتراضات
+    const dt = new Date();
+    document.getElementById('issue_dt').value = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+
+    // تحميل مرؤوسي المشرف
+    let EMPLOYEES = await listEmployeesForSupervisor();
+    const sel = document.getElementById('employee');
+    function renderOptions(filter = '') {
+      const f = (filter || '').toLowerCase();
+      sel.innerHTML = '<option value="">— اختر الموظف —</option>' +
+        (EMPLOYEES || []).filter(e => {
+          const txt = `${e.Name || e.En_Name || ''} ${e.jobID || ''}`.toLowerCase();
+          return !f || txt.includes(f);
+        }).map(e => `<option value="${e.id}">${e.Name || e.En_Name || '-'} — ${e.jobID || '-'}</option>`).join('');
     }
+    renderOptions();
 
-    document.getElementById('warnForm').addEventListener('submit', async (e) => {
+    document.getElementById('empFilter').addEventListener('input', (e) => renderOptions(e.target.value));
+
+    // حفظ
+    document.getElementById('vioForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const jobID   = document.getElementById('jobID').value.trim();
-      const item    = document.getElementById('itemCode').value.trim() || null;
-      const cat     = document.getElementById('category').value.trim() || null;
-      const reason  = document.getElementById('reason').value.trim() || null;
-      const loc     = document.getElementById('location').value.trim() || null;
-      const remarks = document.getElementById('remarks').value.trim() || null;
+      const employee_id = sel.value;
+      if (!employee_id) return toast('اختر الموظف', 'error');
 
-      if (!jobID) return toast('أدخل كود الموظف', 'error');
+      const issue_datetime = document.getElementById('issue_dt').value
+        ? new Date(document.getElementById('issue_dt').value).toISOString()
+        : new Date().toISOString();
+
+      const location = (document.getElementById('location').value || '').trim() || null;
+      const generalRemarks = (document.getElementById('remarks').value || '').trim() || null;
+
+      const checks = Array.from(document.querySelectorAll('.vio')).filter(c => c.checked);
+      const others = (document.getElementById('others').value || '').trim();
+
+      if (checks.length === 0 && !others) {
+        return toast('اختر بندًا واحدًا على الأقل أو اكتب توضيحًا في Others', 'error');
+      }
+
+      const rows = [];
+
+      // البنود المختارة -> سجل لكل بند
+      for (const c of checks) {
+        rows.push({
+          employee_id,
+          issue_datetime,
+          category: c.dataset.cat,
+          item_code: c.dataset.code,
+          reason: c.dataset.title,
+          location,
+          remarks: generalRemarks,
+          issued_by: ctx.session.user.id
+        });
+      }
+
+      // Others / Explanation كسجل مستقل (اختياري)
+      if (others) {
+        rows.push({
+          employee_id,
+          issue_datetime,
+          category: 'Other',
+          item_code: 'Other',
+          reason: 'Others / Explanation',
+          location,
+          remarks: generalRemarks ? (generalRemarks + ' | ' + others) : others,
+          issued_by: ctx.session.user.id
+        });
+      }
 
       try {
-        const emp = await findUserByJobID(jobID);
-        if (!emp) return toast('كود موظف غير صحيح', 'error');
-
-        const payload = {
-          employee_id:   emp.id,
-          item_code:     item,
-          category:      cat,
-          reason:        reason,
-          location:      loc,
-          remarks:       remarks,
-          issue_datetime: new Date().toISOString(),
-          issued_by:      ctx.session.user.id
-        };
-
-        await createViolation(payload);
-        toast('تم إصدار الإنذار بنجاح');
+        const { error } = await supabase.from('violations').insert(rows);
+        if (error) throw error;
+        toast('تم حفظ المخالفة/المخالفات بنجاح');
         e.target.reset();
+        renderOptions(); // يعاد رسم القائمة بعد التفريغ
+        document.getElementById('issue_dt').value = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
       } catch (err) {
-        toast(err.message || 'تعذر إصدار الإنذار', 'error');
+        toast(err.message || 'تعذر الحفظ', 'error');
       }
     });
   </script>
