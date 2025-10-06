@@ -1,60 +1,240 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-<script type="module" src="./js/config.js"></script>
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
-    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
-    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
-    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
-    const logo = document.getElementById('companyLogo');
-    const fb = document.getElementById('logoFallback');
-    if (logo && window.COMPANY_LOGO_URL){
-      logo.src = window.COMPANY_LOGO_URL;
-      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
-      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
-    } else if (fb) {
-      fb.classList.remove('hidden');
-    }
-  }catch(e){}
-});
-</script>
-<title>تقييم الموظفين</title></head><body class='min-h-screen bg-gray-50'>
-<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+  <title>تقييم الموظفين (مشرف) | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
-<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
-      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
-      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+  <!-- شريط علوي -->
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
+        <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
+      </div>
     </div>
-    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
-  </div>
-  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
-</div></nav>
-<main class='max-w-6xl mx-auto p-4'><h2 class='text-xl font-bold mb-4'>تقييم الموظفين (شهري)</h2><div id='empTable' class='bg-white rounded-2xl shadow p-4'></div></main>
-<script type='module'>
-  import { requireAuth } from './js/auth.js'; import { listEmployeesForSupervisor, submitSupervisorEval } from './js/api.js'; import { setRoleBadge, toast } from './js/ui.js';
-  const ctx = await requireAuth(['supervisor']); if(!ctx) return; setRoleBadge(ctx.role);
-  async function render(){ let rows=[]; try{ rows = await listEmployeesForSupervisor(); }catch(e){ console.error(e); }
-    const box=document.getElementById('empTable'); if(!rows || rows.length===0) return box.innerHTML='<p class="text-sm text-gray-500">لا يوجد موظفون مرتبطون بك.</p>';
-    box.innerHTML='<div class="overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="text-right"><th class="p-2">الكود</th><th class="p-2">الاسم</th><th class="p-2">التقييم (1..10)</th><th class="p-2">ملاحظات</th><th class="p-2">حفظ</th></tr></thead><tbody>'+
-      rows.map(r=>`<tr class="border-t"><td class="p-2 font-mono">${r.jobID||'-'}</td><td class="p-2">${r.Name||r.En_Name||'-'}</td><td class="p-2"><input type="number" min="1" max="10" class="border rounded px-2 py-1 w-24" id="score_${r.id}"></td><td class="p-2"><input class="border rounded px-2 py-1 w-56" id="notes_${r.id}"></td><td class="p-2"><button data-id="${r.id}" class="saveBtn bg-blue-600 text-white rounded px-3 py-1">حفظ</button></td></tr>`).join('') + '</tbody></table></div>';
-    document.querySelectorAll('.saveBtn').forEach(btn=> btn.addEventListener('click', async()=>{ const id=btn.getAttribute('data-id'); const score=parseInt(document.getElementById('score_'+id).value); const notes=document.getElementById('notes_'+id).value.trim();
-      if(!score || score<1 || score>10) return toast('الرجاء إدخال تقييم بين 1 و10','error'); try{ await submitSupervisorEval({ employee_id:id, score, notes }); toast('تم الحفظ'); }catch(err){ toast('فشل الحفظ: '+err.message,'error'); } })); }
-  render();
-</script>
-</body></html>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">تقييم الموظفين (مشرف)</h2>
+
+    <!-- اختيار الفترة (شهر/سنة) إلزامي -->
+    <section class="bg-white rounded-2xl shadow p-4 mb-4">
+      <div class="grid sm:grid-cols-6 gap-3">
+        <div>
+          <label class="text-sm">الشهر</label>
+          <select id="month" class="w-full border rounded px-3 py-2">
+            <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+            <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+            <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm">السنة</label>
+          <input id="year" type="number" class="w-full border rounded px-3 py-2" min="2000" max="2100">
+        </div>
+        <div class="sm:col-span-3 flex items-end gap-2">
+          <button id="apply" class="px-4 py-2 bg-blue-600 text-white rounded">تحديث القائمة</button>
+          <button id="showAll" class="px-4 py-2 bg-gray-100 rounded hidden">عرض الكل</button>
+        </div>
+        <div>
+          <label class="text-sm">بحث</label>
+          <input id="q" placeholder="بحث بالاسم أو الكود" class="w-full border rounded px-3 py-2">
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        تُسجَّل التقييمات شهريًا. بعد حفظ تقييم الشهر، لن يظهر الموظف مرة أخرى لنفس الفترة.
+      </p>
+    </section>
+
+    <!-- جدول الموظفين -->
+    <section class="bg-white rounded-2xl shadow p-4">
+      <div id="empty" class="hidden text-center text-gray-500 py-12">لا يوجد موظفون بحاجة للتقييم في هذه الفترة.</div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-right">
+              <th class="p-2">الكود</th>
+              <th class="p-2">الاسم</th>
+              <th class="p-2 w-40">التقييم (1–10)</th>
+              <th class="p-2">ملاحظات</th>
+              <th class="p-2 w-28">حفظ</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { setRoleBadge, toast } from './js/ui.js';
+    import {
+      listEmployeesForSupervisor,
+      existingSupervisorEvals,
+      submitSupervisorEval,
+      periodFromMonthYear
+    } from './js/api.js';
+
+    // السماح للمشرف فقط
+    const ctx = await requireAuth(['supervisor']);
+    if (!ctx) return;
+    setRoleBadge(ctx.role);
+
+    // عناصر DOM
+    const monthEl = document.getElementById('month');
+    const yearEl  = document.getElementById('year');
+    const qEl     = document.getElementById('q');
+    const rows    = document.getElementById('rows');
+    const empty   = document.getElementById('empty');
+    const showAllBtn = document.getElementById('showAll');
+
+    // قيمة افتراضية للشهر/السنة
+    const now = new Date();
+    monthEl.value = String(now.getMonth() + 1);
+    yearEl.value  = String(now.getFullYear());
+
+    let allEmployees = [];
+    let alreadySet = new Set();
+    let showAll = false;
+
+    function render() {
+      const q = (qEl.value || '').trim().toLowerCase();
+      let list = [...allEmployees];
+
+      // فلترة بالبحث
+      if (q) list = list.filter(e =>
+        (e.jobID || '').toLowerCase().includes(q) ||
+        (e.Name || '').toLowerCase().includes(q) ||
+        (e.En_Name || '').toLowerCase().includes(q)
+      );
+
+      // افتراضيًا، اعرض غير المُقيّمين فقط
+      if (!showAll) list = list.filter(e => !alreadySet.has(e.id));
+
+      if (list.length === 0) {
+        empty.classList.remove('hidden');
+        rows.innerHTML = '';
+        showAllBtn.classList.toggle('hidden', alreadySet.size === 0);
+        return;
+      } else {
+        empty.classList.add('hidden');
+      }
+
+      rows.innerHTML = list.map(e => {
+        const disabled = alreadySet.has(e.id);
+        const disCls = disabled ? 'opacity-50 pointer-events-none' : '';
+        return `
+          <tr class="border-t ${disCls}" data-id="${e.id}">
+            <td class="p-2 font-mono">${e.jobID || '-'}</td>
+            <td class="p-2">${e.Name || e.En_Name || '-'}</td>
+            <td class="p-2">
+              <input type="number" min="1" max="10" step="1" class="score w-24 border rounded px-2 py-1" placeholder="مثال: 8">
+            </td>
+            <td class="p-2">
+              <input type="text" class="notes w-full border rounded px-2 py-1" placeholder="ملاحظات (اختياري)">
+            </td>
+            <td class="p-2">
+              <button class="save px-3 py-1 bg-emerald-600 text-white rounded">حفظ</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function load() {
+      const m = monthEl.value;
+      const y = yearEl.value;
+      if (!m || !y) return toast('اختر الشهر والسنة', 'error');
+
+      const period = periodFromMonthYear(m, y);
+      // 1) موظفو المشرف
+      allEmployees = await listEmployeesForSupervisor();
+      // 2) من تم تقييمهم بالفعل
+      alreadySet = await existingSupervisorEvals(period);
+
+      showAll = false;
+      showAllBtn.classList.toggle('hidden', alreadySet.size === 0);
+      render();
+    }
+
+    // حفظ صف واحد
+    async function saveRow(tr) {
+      const id = tr.getAttribute('data-id');
+      const scoreEl = tr.querySelector('.score');
+      const notesEl = tr.querySelector('.notes');
+
+      const score = parseInt(scoreEl.value, 10);
+      const notes = (notesEl.value || '').trim();
+
+      if (!score || score < 1 || score > 10) {
+        scoreEl.focus();
+        return toast('التقييم يجب أن يكون رقمًا من 1 إلى 10', 'error');
+      }
+
+      const m = monthEl.value;
+      const y = yearEl.value;
+      const period = periodFromMonthYear(m, y);
+
+      try {
+        await submitSupervisorEval({ employee_id: id, score, notes, period });
+        toast('تم حفظ التقييم');
+        alreadySet.add(id);
+        // تعطيل الصف
+        tr.classList.add('opacity-50', 'pointer-events-none');
+        // لو نعتمد إخفاء المُقيّمين، أعد الرسم
+        if (!showAll) render();
+      } catch (e) {
+        toast(e.message || 'تعذر الحفظ', 'error');
+      }
+    }
+
+    // أحداث
+    document.getElementById('apply').addEventListener('click', load);
+    qEl.addEventListener('input', render);
+    showAllBtn.addEventListener('click', () => { showAll = !showAll; showAllBtn.textContent = showAll ? 'إظهار غير المُقيّمين فقط' : 'عرض الكل'; render(); });
+
+    rows.addEventListener('click', (e) => {
+      const btn = e.target.closest('.save');
+      if (!btn) return;
+      const tr = btn.closest('tr');
+      saveRow(tr);
+    });
+
+    // تحميل أولي
+    load();
+  </script>
+</body>
+</html>

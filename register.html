@@ -1,68 +1,161 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
 
-<script type="module" src="./js/config.js"></script>
+  <title>إنشاء حساب | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
-    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
-    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
-    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
-    const logo = document.getElementById('companyLogo');
-    const fb = document.getElementById('logoFallback');
-    if (logo && window.COMPANY_LOGO_URL){
-      logo.src = window.COMPANY_LOGO_URL;
-      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
-      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
-    } else if (fb) {
-      fb.classList.remove('hidden');
-    }
-  }catch(e){}
-});
-</script>
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow p-6 w-full max-w-xl">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-8 h-8 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <h1 class="text-lg font-extrabold mt-2" data-company-ar></h1>
+        <p class="text-xs text-gray-500" data-company-en></p>
+      </div>
 
-<title>تسجيل</title></head><body class="min-h-screen bg-gray-50">
-<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
-<div class="min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow p-6 w-full max-w-xl">
-    <h1 class="text-xl font-extrabold mb-4" data-company-ar></h1>
-    <form id="regForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div><label>الكود الوظيفي</label><input id="jobID" class="w-full border rounded px-3 py-2" required></div>
-      <div><label>نوع الحساب</label><select id="role" class="w-full border rounded px-3 py-2" required><option value="">اختر</option><option value="employee">موظف</option><option value="supervisor">مشرف</option></select></div>
-      <div><label>الاسم</label><input id="name" class="w-full border rounded px-3 py-2" required></div>
-      <div><label>كود المشرف (اختياري)</label><input id="supCode" class="w-full border rounded px-3 py-2"></div>
-      <div><label>البريد</label><input id="email" type="email" class="w-full border rounded px-3 py-2" required></div>
-      <div><label>الموبايل</label><input id="mobile" class="w-full border rounded px-3 py-2" required></div>
-      <div class="md:col-span-2"><label>كلمة المرور</label><input id="password" type="password" class="w-full border rounded px-3 py-2" required></div>
-      <div class="md:col-span-2"><button class="w-full bg-green-600 text-white rounded py-2">تسجيل</button></div>
-    </form>
-    <p class="text-sm text-center mt-4">لديك حساب؟ <a class="text-blue-600" href="index.html">دخول</a></p>
+      <form id="regForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">الكود الوظيفي</label>
+          <input id="jobID" class="w-full border rounded px-3 py-2" placeholder="EMP001" required>
+        </div>
+
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">نوع الحساب</label>
+          <select id="role" class="w-full border rounded px-3 py-2" required>
+            <option value="">اختر</option>
+            <option value="employee">موظف</option>
+            <option value="supervisor">مشرف</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">الاسم</label>
+          <input id="name" class="w-full border rounded px-3 py-2" required>
+        </div>
+
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">كود المشرف (jobID)</label>
+          <input id="supId" class="w-full border rounded px-3 py-2" placeholder="اختياري">
+        </div>
+
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">البريد الإلكتروني</label>
+          <input id="email" type="email" class="w-full border rounded px-3 py-2" required>
+        </div>
+
+        <div class="md:col-span-1">
+          <label class="block text-sm mb-1">الموبايل</label>
+          <input id="mobile" class="w-full border rounded px-3 py-2" required>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-1">كلمة المرور</label>
+          <input id="password" type="password" class="w-full border rounded px-3 py-2" required>
+        </div>
+
+        <div class="md:col-span-2">
+          <button id="submitBtn" class="w-full bg-green-600 hover:bg-green-700 transition text-white rounded py-2">
+            إنشاء الحساب
+          </button>
+        </div>
+      </form>
+
+      <p class="text-sm text-center mt-4">
+        لديك حساب بالفعل؟ <a class="text-blue-600 hover:underline" href="index.html">دخول</a>
+      </p>
+    </div>
   </div>
-</div>
-<script type="module">
-import { supabase } from './js/auth.js'; import { toast } from './js/ui.js';
-document.getElementById('regForm').addEventListener('submit', async (e)=>{ e.preventDefault();
- const email=document.getElementById('email').value.trim(), password=document.getElementById('password').value.trim(), name=document.getElementById('name').value.trim(), jobID=document.getElementById('jobID').value.trim(), mobile=document.getElementById('mobile').value.trim(), role=document.getElementById('role').value, supCode=document.getElementById('supCode').value.trim()||null;
- let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password }); if(authErr) return toast('تعذر إنشاء الحساب: '+authErr.message,'error');
- let uid = authData.user?.id || (await supabase.auth.signInWithPassword({ email, password })).data?.user?.id;
- const row = { id: uid, email, mobile, jobID, Name: name, Roll: role, SupervisorCode: supCode, Active: true };
- let { error: insErr } = await supabase.from('users').insert([row]);
- if(insErr) return toast('تم إنشاء الحساب لكن فشل حفظ البيانات: '+insErr.message,'error');
- toast('تم إنشاء الحساب بنجاح'); location.href='index.html';
-});
-</script>
-</body></html>
+
+  <script type="module">
+    import { supabase } from './js/auth.js';
+    import { toast } from './js/ui.js';
+
+    const form = document.getElementById('regForm');
+    const btn  = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const jobID = document.getElementById('jobID').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const role = document.getElementById('role').value;
+      const supId = (document.getElementById('supId').value.trim() || null);
+
+      if (!email || !password || !name || !jobID || !mobile || !role) {
+        return toast('برجاء استكمال جميع الحقول المطلوبة', 'error');
+      }
+
+      btn.disabled = true;
+
+      try {
+        // إنشاء مستخدم auth
+        let { data: authData, error: authErr } = await supabase.auth.signUp({ email, password });
+        if (authErr) throw new Error(authErr.message || 'تعذر إنشاء الحساب');
+
+        const uid =
+          authData?.user?.id ||
+          (await supabase.auth.signInWithPassword({ email, password }))?.data?.user?.id;
+
+        if (!uid) {
+          toast('تم إنشاء الحساب. تحقق من بريدك لتفعيل الحساب.', 'success');
+          return;
+        }
+
+        // إدراج صف في جدول users
+        const row = {
+          id: uid,
+          email,
+          mobile,
+          jobID,
+          Name: name,
+          Roll: role,           // employee / supervisor
+          SupervisorId: supId,  // كود المشرف (jobID) للموظف
+          Active: true
+        };
+
+        const { error: insErr } = await supabase.from('users').insert([row]);
+        if (insErr) throw new Error('تم إنشاء الحساب لكن فشل حفظ بيانات المستخدم: ' + insErr.message);
+
+        toast('تم إنشاء الحساب بنجاح');
+        window.location.href = 'index.html';
+
+      } catch (err) {
+        // رسائل أوضح
+        let msg = err.message || 'تعذر إنشاء الحساب';
+        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('user already')) {
+          msg = 'هذا البريد مسجل بالفعل.';
+        }
+        toast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

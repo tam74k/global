@@ -1,63 +1,217 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-<script type="module" src="./js/config.js"></script>
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
-    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
-    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
-    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
-    const logo = document.getElementById('companyLogo');
-    const fb = document.getElementById('logoFallback');
-    if (logo && window.COMPANY_LOGO_URL){
-      logo.src = window.COMPANY_LOGO_URL;
-      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
-      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
-    } else if (fb) {
-      fb.classList.remove('hidden');
-    }
-  }catch(e){}
-});
-</script>
-<title>تقييمي لمشرفي</title></head><body class='min-h-screen bg-gray-50'>
-<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+  <title>تقييمي لمشرفي (موظف) | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
-<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
-      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
-      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+  <!-- شريط علوي -->
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10ل9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
+        <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
+      </div>
     </div>
-    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
-  </div>
-  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
-</div></nav>
-<main class='max-w-3xl mx-auto p-4'><h2 class='text-xl font-bold mb-4'>تقييم مشرفي (شهري)</h2>
-<div id='box' class='bg-white rounded-2xl shadow p-4'>
-  <div class='mb-3'><span class='text-gray-600'>اسم المشرف: </span><span id='supName' class='font-bold'>—</span></div>
-  <div class='flex items-center gap-3 mb-3'><label>التقييم (1..10)</label><input id='score' type='number' min='1' max='10' class='border rounded px-2 py-1 w-24'></div>
-  <div class='mb-4'><label>ملاحظات (اختياري)</label><input id='notes' class='border rounded px-2 py-1 w-full'></div>
-  <button id='save' class='bg-blue-600 text-white rounded px-4 py-2'>حفظ</button>
-</div></main>
-<script type='module'>
-  import { requireAuth } from './js/auth.js'; import { getMySupervisor, submitEmployeeEval } from './js/api.js'; import { setRoleBadge, toast } from './js/ui.js';
-  const ctx = await requireAuth(['employee']); if(!ctx) return; setRoleBadge(ctx.role);
-  const sup = await getMySupervisor(); if(sup) document.getElementById('supName').textContent = sup.Name || sup.En_Name || '—';
-  document.getElementById('save').addEventListener('click', async()=>{ const score=parseInt(document.getElementById('score').value); const notes=document.getElementById('notes').value.trim();
-    if(!sup) return toast('لم يتم ربط مشرف لك (SupervisorCode).','error'); if(!score || score<1 || score>10) return toast('أدخل تقييم بين 1 و10','error');
-    try{ await submitEmployeeEval({ supervisor_id: sup.id, score, notes }); toast('تم الحفظ'); document.getElementById('score').value=''; document.getElementById('notes').value=''; }catch(err){ toast('فشل الحفظ: '+err.message,'error'); } });
-</script>
-</body></html>
+  </nav>
+
+  <main class="max-w-4xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">تقييمي لمشرفي (موظف)</h2>
+
+    <!-- بيانات المشرف -->
+    <section class="bg-white rounded-2xl shadow p-4 mb-4">
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <div class="text-xs text-gray-500">اسم المشرف</div>
+          <div id="supName" class="font-bold">—</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">كود المشرف (jobID)</div>
+          <div id="supJob" class="font-mono">—</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500">الحالة</div>
+          <div id="status" class="text-sm">—</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        يتم تقديم تقييم واحد لكل شهر. بعد الحفظ لا يظهر هذا الشهر مرة أخرى.
+      </p>
+    </section>
+
+    <!-- اختيار الفترة -->
+    <section class="bg-white rounded-2xl shadow p-4 mb-4">
+      <div class="grid sm:grid-cols-6 gap-3">
+        <div>
+          <label class="text-sm">الشهر</label>
+          <select id="month" class="w-full border rounded px-3 py-2">
+            <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+            <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+            <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm">السنة</label>
+          <input id="year" type="number" class="w-full border rounded px-3 py-2" min="2000" max="2100">
+        </div>
+        <div class="sm:col-span-3 flex items-end gap-2">
+          <button id="check" class="px-4 py-2 bg-blue-600 text-white rounded">تحقق من الحالة</button>
+          <span id="periodText" class="text-sm text-gray-600"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- نموذج التقييم -->
+    <section class="bg-white rounded-2xl shadow p-4" id="formSection">
+      <form id="evalForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm mb-1">التقييم (1–10)</label>
+          <input id="score" type="number" min="1" max="10" step="1" class="w-full border rounded px-3 py-2" placeholder="مثال: 9" required>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm mb-1">ملاحظات (اختياري)</label>
+          <input id="notes" class="w-full border rounded px-3 py-2" placeholder="ملاحظات عامة">
+        </div>
+        <div class="md:col-span-2">
+          <button class="w-full bg-emerald-600 hover:bg-emerald-700 transition text-white rounded py-2">
+            حفظ التقييم
+          </button>
+        </div>
+      </form>
+      <div id="locked" class="hidden text-center text-gray-500 py-10">
+        تم تقديم تقييم هذه الفترة مسبقًا.
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { setRoleBadge, toast } from './js/ui.js';
+    import {
+      getMySupervisor,
+      existingEmployeeEvalForSupervisor,
+      submitEmployeeEval,
+      periodFromMonthYear
+    } from './js/api.js';
+
+    // السماح للموظف فقط
+    const ctx = await requireAuth(['employee']);
+    if (!ctx) return;
+    setRoleBadge(ctx.role);
+
+    // عناصر
+    const supName = document.getElementById('supName');
+    const supJob  = document.getElementById('supJob');
+    const status  = document.getElementById('status');
+    const monthEl = document.getElementById('month');
+    const yearEl  = document.getElementById('year');
+    const checkBtn= document.getElementById('check');
+    const periodText = document.getElementById('periodText');
+    const formSection= document.getElementById('formSection');
+    const form   = document.getElementById('evalForm');
+    const scoreEl= document.getElementById('score');
+    const notesEl= document.getElementById('notes');
+    const locked = document.getElementById('locked');
+
+    // ضبط الشهر/السنة الافتراضيين
+    const now = new Date();
+    monthEl.value = String(now.getMonth() + 1);
+    yearEl.value  = String(now.getFullYear());
+
+    // تحميل مشرفي
+    let sup = null;
+    try {
+      sup = await getMySupervisor();
+      if (!sup) {
+        status.textContent = 'لا يوجد مشرف مُسجل على حسابك. راجع شؤون الموظفين.';
+        formSection.classList.add('opacity-50','pointer-events-none');
+      } else {
+        supName.textContent = sup.Name || sup.En_Name || '—';
+        supJob.textContent  = sup.jobID || '—';
+        status.textContent  = 'جاهز للتقييم';
+      }
+    } catch (e) {
+      status.textContent = 'خطأ أثناء تحميل بيانات المشرف';
+      console.error(e);
+    }
+
+    function currentPeriod() {
+      const m = monthEl.value, y = yearEl.value;
+      const p = periodFromMonthYear(m, y);
+      periodText.textContent = `الفترة: ${y}-${String(m).padStart(2,'0')}`;
+      return p;
+    }
+
+    async function checkLock() {
+      const period = currentPeriod();
+      const already = await existingEmployeeEvalForSupervisor(period);
+      if (already) {
+        // تم تقييم هذه الفترة: اقفل النموذج
+        locked.classList.remove('hidden');
+        form.classList.add('hidden');
+      } else {
+        locked.classList.add('hidden');
+        form.classList.remove('hidden');
+      }
+    }
+
+    checkBtn.addEventListener('click', checkLock);
+    // افتراضيًا تحقّق مباشرة
+    checkLock();
+
+    // حفظ التقييم
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!sup?.id) return toast('لا يمكن الحفظ بدون مشرف مرتبط بحسابك', 'error');
+
+      const score = parseInt(scoreEl.value, 10);
+      const notes = (notesEl.value || '').trim();
+      if (!score || score < 1 || score > 10) {
+        scoreEl.focus();
+        return toast('التقييم يجب أن يكون رقمًا من 1 إلى 10', 'error');
+      }
+
+      try {
+        const period = currentPeriod();
+        await submitEmployeeEval({ supervisor_id: sup.id, score, notes, period });
+        toast('تم حفظ التقييم');
+        checkLock(); // سيغلق النموذج لهذه الفترة
+        form.reset();
+      } catch (err) {
+        toast(err.message || 'تعذر حفظ التقييم', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

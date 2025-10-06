@@ -1,78 +1,116 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-<script type="module" src="./js/config.js"></script>
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
-    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
-    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
-    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
-    const logo = document.getElementById('companyLogo');
-    const fb = document.getElementById('logoFallback');
-    if (logo && window.COMPANY_LOGO_URL){
-      logo.src = window.COMPANY_LOGO_URL;
-      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
-      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
-    } else if (fb) {
-      fb.classList.remove('hidden');
-    }
-  }catch(e){}
-});
-</script>
-<title>الواجهة الرئيسية</title></head><body class='min-h-screen bg-gray-50'>
-<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+  <title>الواجهة الرئيسية | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
-<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
-      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
-      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
+  <!-- شريط علوي -->
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-sm">
+        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
+        <a href="#" id="logout" class="text-red-600 hover:underline">خروج</a>
+      </div>
     </div>
-    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
-  </div>
-  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="index.html" id="logout" class="text-red-600">خروج</a></div>
-</div></nav>
-<main class="max-w-7xl mx-auto p-4">
-  <h2 class="text-xl font-bold mb-4">الواجهة الرئيسية</h2>
-  <div id="cards" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-</main>
-<script type="module">
-  import { requireAuth } from './js/auth.js';
-  const cards=document.getElementById('cards');
-  function setRoleBadge(role){ const el=document.getElementById('roleBadge'); if(!el) return; const isSup=(role||'').toLowerCase()==='supervisor';
-    el.textContent=isSup?'مشرف':'موظف'; el.className='px-2 py-1 text-xs rounded-full border '+(isSup?'bg-purple-50 border-purple-200 text-purple-700':'bg-sky-50 border-sky-200 text-sky-700'); }
-  function render(role){ const common=[
-      { href:'my_profile.html', icon:'🧾', title:'بياناتي', sub:'عرض كامل لبياناتي' },
-      { href:'my_attendance.html', icon:'📊', title:'حضوري', sub:'تصفية بين تاريخين (الشهر الحالي افتراضيًا)' },
-      { href:'my_violations.html', icon:'⚠️', title:'مخالفاتي', sub:'المخالفات المسجّلة عليّ' },
-      { href:'leave_request.html', icon:'🗓️', title:'طلب إجازة', sub:'إرسال طلب إجازة' },
-      { href:'permission_request.html', icon:'⏱️', title:'طلب إذن', sub:'ساعات/خروج مؤقت' },
-      { href:'hr_request.html', icon:'📄', title:'طلب مستندات HR', sub:'شهادات/خطابات' }
-    ]; const employeeOnly=[ { href:'evaluate_supervisor.html', icon:'⭐', title:'تقييمي لمشرفي', sub:'مرة كل شهر' } ];
-    const supervisorOnly=[
-      { href:'attendance_register.html', icon:'🕒', title:'الحضور/الانصراف', sub:'يدوي + QR' },
-      { href:'violations.html', icon:'⚠️', title:'تسجيل مخالفة', sub:'GSSG-NAT 300-004' },
-      { href:'evaluate_employees.html', icon:'⭐', title:'تقييم الموظفين', sub:'شهري' },
-      { href:'attendance_report.html', icon:'📈', title:'تقارير الحضور', sub:'تجميعي + CSV' },
-      { href:'violations_list.html', icon:'📝', title:'سجل الإنذارات', sub:'تصفية/طباعة/CSV' }
-    ]; const list=(role==='supervisor')?[...supervisorOnly,...common]:[...employeeOnly,...common];
-    cards.innerHTML = list.map(i=> `<a href="${i.href}" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring"><span class="text-xl">${i.icon}</span><div><p class="font-bold">${i.title}</p><p class="text-sm text-gray-500">${i.sub}</p></div></a>`).join('');
-  }
-  async function boot(){ const ctx=await requireAuth(['employee','supervisor']); if(!ctx) return; const role=ctx.role||'employee'; setRoleBadge(role); render(role);
-    document.getElementById('logout')?.addEventListener('click', async (e)=>{ e.preventDefault(); (await import('./js/auth.js')).supabase.auth.signOut(); location.href='index.html'; }); }
-  window.addEventListener('pageshow', boot); boot();
-</script>
-</body></html>
+  </nav>
+
+  <!-- المحتوى -->
+  <main class="max-w-7xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">الواجهة الرئيسية</h2>
+    <div id="cards" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </main>
+
+  <script type="module">
+    import { requireAuth, supabase } from './js/auth.js';
+    import { setRoleBadge } from './js/ui.js';
+
+    // بطاقات الواجهة
+    const common = [
+      { href:'my_profile.html',       icon:'🧾', title:'بياناتي',               sub:'عرض كامل لبياناتي (غير قابل للتعديل)' },
+      { href:'my_attendance.html',    icon:'📊', title:'حضوري',                 sub:'تصفية بين تاريخين (الشهر الحالي افتراضيًا)' },
+      { href:'my_violations.html',    icon:'⚠️', title:'مخالفاتي',              sub:'المخالفات المسجّلة عليّ' },
+      { href:'leave_request.html',    icon:'🗓️', title:'طلب إجازة',            sub:'إرسال طلب إجازة' },
+      { href:'permission_request.html',icon:'⏱️', title:'طلب إذن',              sub:'ساعات/خروج مؤقت' },
+      { href:'hr_request.html',       icon:'📄', title:'طلب مستندات HR',        sub:'شهادات/خطابات' }
+    ];
+
+    const employeeOnly = [
+      { href:'evaluate_supervisor.html', icon:'⭐', title:'تقييمي لمشرفي', sub:'مرة كل شهر' }
+    ];
+
+    const supervisorOnly = [
+      { href:'attendance_register.html', icon:'🕒', title:'الحضور/الانصراف', sub:'يدوي + QR (اختيار نمط مرة واحدة)' },
+      { href:'violations.html',          icon:'⚠️', title:'تسجيل مخالفة',   sub:'مطابق لنموذج NAT 300-004' },
+      { href:'evaluate_employees.html',  icon:'⭐', title:'تقييم الموظفين',  sub:'تقييم شهري للمرؤوسين' },
+      { href:'attendance_report.html',   icon:'📈', title:'تقارير الحضور',   sub:'تجميعي + تصدير CSV' },
+      { href:'violations_list.html',     icon:'📝', title:'سجل الإنذارات',   sub:'تصفية/طباعة/CSV' }
+    ];
+
+    function renderCards(role) {
+      const isSup = (role || '').toLowerCase() === 'supervisor';
+      const list = isSup ? [...supervisorOnly, ...common] : [...employeeOnly, ...common];
+
+      const html = list.map(i => `
+        <a href="${i.href}" class="bg-white rounded-2xl shadow p-4 flex items-center gap-3 hover:ring transition">
+          <span class="text-xl">${i.icon}</span>
+          <div>
+            <p class="font-bold">${i.title}</p>
+            <p class="text-sm text-gray-500">${i.sub}</p>
+          </div>
+        </a>
+      `).join('');
+      document.getElementById('cards').innerHTML = html;
+    }
+
+    async function boot() {
+      const ctx = await requireAuth(['employee','supervisor']);
+      if (!ctx) return;
+      setRoleBadge(ctx.role);
+      renderCards(ctx.role);
+
+      // خروج
+      document.getElementById('logout')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        location.href = 'index.html';
+      });
+    }
+
+    // لمعالجة العودة من صفحات أخرى بدون إعادة تحميل كاملة
+    window.addEventListener('pageshow', boot);
+    boot();
+  </script>
+</body>
+</html>

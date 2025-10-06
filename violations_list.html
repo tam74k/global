@@ -1,94 +1,191 @@
-<!doctype html><html lang='ar' dir='rtl'><head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-<script type="module" src="./js/config.js"></script>
+  <!-- إعدادات الشركة والشعار -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/brand.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    const ar = window.COMPANY_NAME_AR || 'المجموعة العالمية للخدمات الأمنية';
-    const en = window.COMPANY_NAME_EN || 'Global Security Services Group';
-    document.querySelectorAll('[data-company-ar]').forEach(e=> e.textContent = ar);
-    document.querySelectorAll('[data-company-en]').forEach(e=> e.textContent = en);
-    const logo = document.getElementById('companyLogo');
-    const fb = document.getElementById('logoFallback');
-    if (logo && window.COMPANY_LOGO_URL){
-      logo.src = window.COMPANY_LOGO_URL;
-      logo.onerror = ()=>{ if(fb) fb.classList.remove('hidden'); logo.classList.add('hidden'); };
-      logo.onload = ()=>{ logo.classList.remove('hidden'); if (fb) fb.classList.add('hidden'); };
-    } else if (fb) {
-      fb.classList.remove('hidden');
-    }
-  }catch(e){}
-});
-</script>
-<title>سجل الإنذارات</title></head><body class='min-h-screen bg-gray-50'>
-<div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+  <title>سجل الإنذارات | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
 
-<nav class="bg-white shadow-sm"><div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
-      <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
-      <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
-    </div>
-    <div><h1 class="text-sm font-bold" data-company-ar></h1><p class="text-xs text-gray-500" data-company-en></p></div>
-  </div>
-  <div class="flex items-center gap-4 text-sm"><span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span><a href="dashboard.html" class="text-blue-700">الرجوع</a></div>
-</div></nav>
-<main class="max-w-7xl mx-auto p-4">
-  <section class="bg-white rounded-2xl shadow p-4 mb-4">
-    <div class="grid sm:grid-cols-6 gap-3">
-      <div class="sm:col-span-2"><label class="text-sm">موظف</label><select id="emp" class="w-full border rounded px-3 py-2"></select></div>
-      <div><label class="text-sm">من تاريخ</label><input id="from" type="date" class="w-full border rounded px-3 py-2"></div>
-      <div><label class="text-sm">إلى تاريخ</label><input id="to" type="date" class="w-full border rounded px-3 py-2"></div>
-      <div class="sm:col-span-2 flex items-end gap-2">
-        <button id="apply" class="px-4 py-2 bg-blue-600 text-white rounded">تطبيق</button>
-        <button id="thisMonth" class="px-4 py-2 bg-gray-100 rounded">الشهر الحالي</button>
-        <button id="exportCsv" class="px-4 py-2 bg-emerald-600 text-white rounded">تصدير CSV</button>
-        <button id="print" class="px-4 py-2 bg-gray-700 text-white rounded">طباعة</button>
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
+        <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
       </div>
     </div>
-  </section>
-  <section class="bg-white rounded-2xl shadow p-4" id="printArea">
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead><tr class="text-right">
-          <th class="p-2">التاريخ/الوقت</th><th class="p-2">الكود</th><th class="p-2">الاسم</th><th class="p-2">الرمز</th><th class="p-2">التصنيف</th><th class="p-2">السبب</th><th class="p-2">الموقع</th><th class="p-2">ملاحظات</th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-  </section>
-</main>
-<script type="module">
-  import { requireAuth } from './js/auth.js'; import { setRoleBadge } from './js/ui.js';
-  import { listEmployeesForSupervisor, listSupervisorViolationsRange } from './js/api.js';
-  const ctx = await requireAuth(['supervisor']); if(!ctx) return; setRoleBadge(ctx.role);
-  const employees = await listEmployeesForSupervisor(); const empSel=document.getElementById('emp');
-  empSel.innerHTML = '<option value="">الكل</option>' + (employees||[]).map(e=>`<option value="${e.id}">${e.jobID||''} — ${e.Name||e.En_Name||''}</option>`).join('');
-  const fromEl=document.getElementById('from'); const toEl=document.getElementById('to'); const rows=document.getElementById('rows');
-  function setThisMonth(){ const d=new Date(); fromEl.value=new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10); toEl.value=new Date().toISOString().slice(0,10);}
-  setThisMonth();
-  function toCSV(arr){ const header=['datetime','jobID','name','item_code','category','reason','location','remarks']; const lines=[header.join(',')]; for(const r of arr){ lines.push([r.dt,r.jobID,r.name,r.item_code||'',r.category||'',r.reason||'',r.location||'',r.remarks||''].map(x=>('"'+String(x).replaceAll('"','""')+'"')).join(',')); } return lines.join('\n'); }
-  async function load(){ const { records, employees: emps } = await listSupervisorViolationsRange({ from:fromEl.value, to:toEl.value }); const map=new Map((emps||[]).map(e=>[e.id,e]));
-    let list=(records||[]).map(v=>{ const e=map.get(v.employee_id)||{}; const name=e.Name||e.En_Name||'-', jobID=e.jobID||'-'; return { dt: v.issue_datetime? new Date(v.issue_datetime).toLocaleString('en-GB'): '-', jobID, name, ...v }; });
-    const filterId=empSel.value; if(filterId) list=list.filter(x=> x.employee_id === filterId);
-    rows.innerHTML = list.map(r=>`<tr class="border-t"><td class="p-2">${r.dt}</td><td class="p-2 font-mono">${r.jobID}</td><td class="p-2">${r.name}</td><td class="p-2">${r.item_code||'—'}</td><td class="p-2">${r.category||'—'}</td><td class="p-2">${r.reason||'—'}</td><td class="p-2">${r.location||'—'}</td><td class="p-2">${r.remarks||'—'}</td></tr>`).join('');
-    window.__lastViolations = list;
-  }
-  document.getElementById('apply').addEventListener('click', load); document.getElementById('thisMonth').addEventListener('click', ()=>{ setThisMonth(); load(); });
-  document.getElementById('exportCsv').addEventListener('click', ()=>{ const csv=toCSV(window.__lastViolations||[]); const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`violations_${fromEl.value}_to_${toEl.value}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); });
-  document.getElementById('print').addEventListener('click', ()=> window.print());
-  load();
-</script>
-</body></html>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4">
+    <section class="bg-white rounded-2xl shadow p-4 mb-4">
+      <div class="grid sm:grid-cols-6 gap-3">
+        <div class="sm:col-span-2">
+          <label class="text-sm">الموظف</label>
+          <select id="emp" class="w-full border rounded px-3 py-2"></select>
+        </div>
+        <div>
+          <label class="text-sm">من تاريخ</label>
+          <input id="from" type="date" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="text-sm">إلى تاريخ</label>
+          <input id="to" type="date" class="w-full border rounded px-3 py-2">
+        </div>
+        <div class="sm:col-span-2 flex items-end gap-2">
+          <button id="apply" class="px-4 py-2 bg-blue-600 text-white rounded">تطبيق</button>
+          <button id="thisMonth" class="px-4 py-2 bg-gray-100 rounded">الشهر الحالي</button>
+          <button id="exportCsv" class="px-4 py-2 bg-emerald-600 text-white rounded">تصدير CSV</button>
+          <button id="print" class="px-4 py-2 bg-gray-700 text-white rounded">طباعة</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl shadow p-4" id="printArea">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="text-right">
+              <th class="p-2">التاريخ/الوقت</th>
+              <th class="p-2">الكود</th>
+              <th class="p-2">الاسم</th>
+              <th class="p-2">الرمز</th>
+              <th class="p-2">التصنيف</th>
+              <th class="p-2">السبب</th>
+              <th class="p-2">الموقع</th>
+              <th class="p-2">ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+    import { setRoleBadge } from './js/ui.js';
+    import { listEmployeesForSupervisor, listSupervisorViolationsRange } from './js/api.js';
+
+    const ctx = await requireAuth(['supervisor']);
+    if (!ctx) return;
+    setRoleBadge(ctx.role);
+
+    const empSel = document.getElementById('emp');
+    const fromEl = document.getElementById('from');
+    const toEl   = document.getElementById('to');
+    const rows   = document.getElementById('rows');
+
+    // تعبئة الموظفين
+    const employees = await listEmployeesForSupervisor();
+    empSel.innerHTML =
+      '<option value="">الكل</option>' +
+      (employees || [])
+        .map(e => `<option value="${e.id}">${e.jobID || ''} — ${e.Name || e.En_Name || ''}</option>`)
+        .join('');
+
+    function setThisMonth() {
+      const d = new Date();
+      fromEl.value = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10);
+      toEl.value   = new Date().toISOString().slice(0,10);
+    }
+    setThisMonth();
+
+    function toCSV(arr) {
+      const header = ['datetime','jobID','name','item_code','category','reason','location','remarks'];
+      const lines = [header.join(',')];
+      for (const r of arr) {
+        const row = [
+          r.dt, r.jobID, r.name, r.item_code || '', r.category || '',
+          r.reason || '', r.location || '', r.remarks || ''
+        ].map(v => `"${String(v).replaceAll('"','""')}"`);
+        lines.push(row.join(','));
+      }
+      return lines.join('\n');
+    }
+
+    async function load() {
+      const { records, employees: emps } = await listSupervisorViolationsRange({
+        from: fromEl.value, to: toEl.value
+      });
+
+      const map = new Map((emps || []).map(e => [e.id, e]));
+      let list = (records || []).map(v => {
+        const e = map.get(v.employee_id) || {};
+        return {
+          employee_id: v.employee_id,
+          dt: v.issue_datetime ? new Date(v.issue_datetime).toLocaleString('en-GB') : '-',
+          jobID: e.jobID || '-',
+          name:  e.Name || e.En_Name || '-',
+          item_code: v.item_code,
+          category:  v.category,
+          reason:    v.reason,
+          location:  v.location,
+          remarks:   v.remarks
+        };
+      });
+
+      const filterId = empSel.value;
+      if (filterId) list = list.filter(x => x.employee_id === filterId);
+
+      rows.innerHTML = list.map(r => `
+        <tr class="border-t">
+          <td class="p-2">${r.dt}</td>
+          <td class="p-2 font-mono">${r.jobID}</td>
+          <td class="p-2">${r.name}</td>
+          <td class="p-2">${r.item_code || '—'}</td>
+          <td class="p-2">${r.category || '—'}</td>
+          <td class="p-2">${r.reason || '—'}</td>
+          <td class="p-2">${r.location || '—'}</td>
+          <td class="p-2">${r.remarks || '—'}</td>
+        </tr>
+      `).join('');
+
+      window.__lastViolations = list;
+    }
+
+    document.getElementById('apply').addEventListener('click', load);
+    document.getElementById('thisMonth').addEventListener('click', () => { setThisMonth(); load(); });
+    document.getElementById('exportCsv').addEventListener('click', () => {
+      const csv = toCSV(window.__lastViolations || []);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `violations_${fromEl.value}_to_${toEl.value}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('print').addEventListener('click', () => window.print());
+
+    load();
+  </script>
+</body>
+</html>
