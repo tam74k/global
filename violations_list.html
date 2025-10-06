@@ -3,20 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Tailwind + Supabase -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- خط Cairo -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
 
-  <!-- إعدادات الشركة والشعار -->
   <script type="module" src="./js/config.js"></script>
+  <script>window.COMPANY_LOGO_URL="https://tam74k.github.io/global/Logo1.png";try{localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL);}catch(e){}</script>
   <script type="module" src="./js/brand.js"></script>
 
-  <title>سجل الإنذارات | GSSG</title>
+  <title>سجل الإنذارات (فريقي) | GSSG</title>
 </head>
 <body class="min-h-screen bg-gray-50">
   <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
@@ -25,12 +21,8 @@
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
-          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
-               class="w-full h-full object-contain hidden" alt="logo">
-          <svg id="logoFallback" class="w-6 h-6 text-blue-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
-          </svg>
+          <img id="companyLogo" class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>
         </div>
         <div>
           <h1 class="text-sm font-bold" data-company-ar></h1>
@@ -38,16 +30,17 @@
         </div>
       </div>
       <div class="flex items-center gap-4 text-sm">
-        <span id="roleBadge" class="px-2 py-1 text-xs rounded-full border bg-slate-50"></span>
         <a href="dashboard.html" class="text-blue-700 hover:underline">الرجوع</a>
       </div>
     </div>
   </nav>
 
   <main class="max-w-7xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">سجل إنذارات الفريق</h2>
+
     <section class="bg-white rounded-2xl shadow p-4 mb-4">
-      <div class="grid sm:grid-cols-6 gap-3">
-        <div class="sm:col-span-2">
+      <div class="grid xl:grid-cols-12 lg:grid-cols-10 md:grid-cols-8 sm:grid-cols-6 grid-cols-2 gap-3">
+        <div class="md:col-span-2">
           <label class="text-sm">الموظف</label>
           <select id="emp" class="w-full border rounded px-3 py-2"></select>
         </div>
@@ -59,9 +52,29 @@
           <label class="text-sm">إلى تاريخ</label>
           <input id="to" type="date" class="w-full border rounded px-3 py-2">
         </div>
-        <div class="sm:col-span-2 flex items-end gap-2">
+        <div>
+          <label class="text-sm">التصنيف</label>
+          <select id="category" class="w-full border rounded px-3 py-2">
+            <option value="">الكل</option>
+            <option value="Grooming">Grooming</option>
+            <option value="PSFRD">PSFRD</option>
+            <option value="Conduct">Conduct</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm">الكود</label>
+          <input id="itemCode" class="w-full border rounded px-3 py-2" placeholder="G1 / P3 / C10...">
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-sm">بحث</label>
+          <input id="q" class="w-full border rounded px-3 py-2" placeholder="بحث في الاسم/الكود/السبب/الموقع">
+        </div>
+        <div class="flex items-end gap-2">
           <button id="apply" class="px-4 py-2 bg-blue-600 text-white rounded">تطبيق</button>
           <button id="thisMonth" class="px-4 py-2 bg-gray-100 rounded">الشهر الحالي</button>
+        </div>
+        <div class="flex items-end gap-2">
           <button id="exportCsv" class="px-4 py-2 bg-emerald-600 text-white rounded">تصدير CSV</button>
           <button id="print" class="px-4 py-2 bg-gray-700 text-white rounded">طباعة</button>
         </div>
@@ -76,8 +89,8 @@
               <th class="p-2">التاريخ/الوقت</th>
               <th class="p-2">الكود</th>
               <th class="p-2">الاسم</th>
-              <th class="p-2">الرمز</th>
               <th class="p-2">التصنيف</th>
+              <th class="p-2">الرمز</th>
               <th class="p-2">السبب</th>
               <th class="p-2">الموقع</th>
               <th class="p-2">ملاحظات</th>
@@ -91,7 +104,7 @@
 
   <script type="module">
     import { requireAuth } from './js/auth.js';
-    import { setRoleBadge } from './js/ui.js';
+    import { setRoleBadge, toast } from './js/ui.js';
     import { listEmployeesForSupervisor, listSupervisorViolationsRange } from './js/api.js';
 
     const ctx = await requireAuth(['supervisor']);
@@ -101,6 +114,9 @@
     const empSel = document.getElementById('emp');
     const fromEl = document.getElementById('from');
     const toEl   = document.getElementById('to');
+    const catEl  = document.getElementById('category');
+    const codeEl = document.getElementById('itemCode');
+    const qEl    = document.getElementById('q');
     const rows   = document.getElementById('rows');
 
     // تعبئة الموظفين
@@ -119,67 +135,88 @@
     setThisMonth();
 
     function toCSV(arr) {
-      const header = ['datetime','jobID','name','item_code','category','reason','location','remarks'];
+      const header = ['datetime','jobID','name','category','item_code','reason','location','remarks'];
       const lines = [header.join(',')];
       for (const r of arr) {
         const row = [
-          r.dt, r.jobID, r.name, r.item_code || '', r.category || '',
+          r.dt, r.jobID, r.name, r.category || '', r.item_code || '',
           r.reason || '', r.location || '', r.remarks || ''
-        ].map(v => `"${String(v).replaceAll('"','""')}"`);
+        ].map(v => `"${String(v??'').replaceAll('"','""')}"`);
         lines.push(row.join(','));
       }
       return lines.join('\n');
     }
 
     async function load() {
-      const { records, employees: emps } = await listSupervisorViolationsRange({
-        from: fromEl.value, to: toEl.value
-      });
+      try {
+        const { records, employees: emps } = await listSupervisorViolationsRange({
+          from: fromEl.value, to: toEl.value
+        });
 
-      const map = new Map((emps || []).map(e => [e.id, e]));
-      let list = (records || []).map(v => {
-        const e = map.get(v.employee_id) || {};
-        return {
-          employee_id: v.employee_id,
-          dt: v.issue_datetime ? new Date(v.issue_datetime).toLocaleString('en-GB') : '-',
-          jobID: e.jobID || '-',
-          name:  e.Name || e.En_Name || '-',
-          item_code: v.item_code,
-          category:  v.category,
-          reason:    v.reason,
-          location:  v.location,
-          remarks:   v.remarks
-        };
-      });
+        const map = new Map((emps || []).map(e => [e.id, e]));
+        let list = (records || []).map(v => {
+          const e = map.get(v.employee_id) || {};
+          return {
+            employee_id: v.employee_id,
+            dt: v.issue_datetime ? new Date(v.issue_datetime).toLocaleString('en-GB') : '-',
+            jobID: e.jobID || '-',
+            name:  e.Name || e.En_Name || '-',
+            item_code: v.item_code,
+            category:  v.category,
+            reason:    v.reason,
+            location:  v.location,
+            remarks:   v.remarks
+          };
+        });
 
-      const filterId = empSel.value;
-      if (filterId) list = list.filter(x => x.employee_id === filterId);
+        // فلاتر
+        const selId = empSel.value;
+        const cat   = catEl.value;
+        const code  = (codeEl.value||'').trim().toUpperCase();
+        const term  = (qEl.value||'').trim().toLowerCase();
 
-      rows.innerHTML = list.map(r => `
-        <tr class="border-t">
-          <td class="p-2">${r.dt}</td>
-          <td class="p-2 font-mono">${r.jobID}</td>
-          <td class="p-2">${r.name}</td>
-          <td class="p-2">${r.item_code || '—'}</td>
-          <td class="p-2">${r.category || '—'}</td>
-          <td class="p-2">${r.reason || '—'}</td>
-          <td class="p-2">${r.location || '—'}</td>
-          <td class="p-2">${r.remarks || '—'}</td>
-        </tr>
-      `).join('');
+        if (selId) list = list.filter(x => x.employee_id === selId);
+        if (cat)   list = list.filter(x => (x.category||'') === cat);
+        if (code)  list = list.filter(x => (x.item_code||'').toUpperCase().includes(code));
+        if (term)  list = list.filter(x =>
+          (x.name||'').toLowerCase().includes(term) ||
+          (x.jobID||'').toLowerCase().includes(term) ||
+          (x.reason||'').toLowerCase().includes(term) ||
+          (x.location||'').toLowerCase().includes(term) ||
+          (x.remarks||'').toLowerCase().includes(term)
+        );
 
-      window.__lastViolations = list;
+        window.__teamVios = list;
+
+        rows.innerHTML = list.map(r => `
+          <tr class="border-t">
+            <td class="p-2">${r.dt}</td>
+            <td class="p-2 font-mono">${r.jobID}</td>
+            <td class="p-2">${r.name}</td>
+            <td class="p-2">${r.category || '—'}</td>
+            <td class="p-2">${r.item_code || '—'}</td>
+            <td class="p-2">${r.reason || '—'}</td>
+            <td class="p-2">${r.location || '—'}</td>
+            <td class="p-2">${r.remarks || '—'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        toast(e.message || 'تعذر التحميل', 'error');
+      }
     }
 
+    // أحداث
     document.getElementById('apply').addEventListener('click', load);
     document.getElementById('thisMonth').addEventListener('click', () => { setThisMonth(); load(); });
+    qEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); load(); }});
+
     document.getElementById('exportCsv').addEventListener('click', () => {
-      const csv = toCSV(window.__lastViolations || []);
+      const csv = toCSV(window.__teamVios || []);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href = url;
-      a.download = `violations_${fromEl.value}_to_${toEl.value}.csv`;
+      a.download = `violations_team_${fromEl.value}_to_${toEl.value}.csv`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
