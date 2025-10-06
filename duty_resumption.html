@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind + Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- خط Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>html,body{font-family:"Cairo",ui-sans-serif,system-ui}</style>
+
+  <!-- إعدادات الشركة -->
+  <script type="module" src="./js/config.js"></script>
+
+  <!-- تثبيت الشعار مباشرة -->
+  <script>
+    window.COMPANY_LOGO_URL = "https://tam74k.github.io/global/Logo1.png";
+    try { localStorage.setItem('COMPANY_LOGO_URL', window.COMPANY_LOGO_URL); } catch(e){}
+  </script>
+
+  <!-- تشغيل الـbranding (الشعار + أسماء الشركة) -->
+  <script type="module" src="./js/brand.js"></script>
+
+  <title>Duty Resumption Form | GSSG</title>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div id="toast-holder" class="fixed top-4 right-4 z-50"></div>
+
+  <!-- Header -->
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 ring-2 ring-blue-100 flex items-center justify-center overflow-hidden">
+          <img id="companyLogo" referrerpolicy="no-referrer" crossorigin="anonymous"
+               class="w-full h-full object-contain hidden" alt="logo">
+          <svg id="logoFallback" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-sm font-bold" data-company-ar></h1>
+          <p class="text-xs text-gray-500" data-company-en></p>
+        </div>
+      </div>
+      <a href="dashboard.html" class="text-blue-700 text-sm hover:underline">الرجوع</a>
+    </div>
+  </nav>
+
+  <!-- Body -->
+  <main class="max-w-4xl mx-auto p-4">
+    <h2 class="text-xl font-bold mb-4">Duty Resumption Form (GSSG-HR 300-016)</h2>
+
+    <form id="drForm" class="bg-white rounded-2xl shadow p-4 grid grid-cols-1 gap-6">
+      <!-- Header block (Date, Employee, Position, Location, Dept, Contact) -->
+      <section class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm mb-1">Date</label>
+          <input id="date" type="date" class="w-full border rounded-lg px-3 py-2" required>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Employee ID</label>
+          <input id="emp_id" class="w-full border rounded-lg px-3 py-2 font-mono" readonly>
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Employee Name</label>
+          <input id="emp_name" class="w-full border rounded-lg px-3 py-2" readonly>
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">Position</label>
+          <input id="position" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Location</label>
+          <input id="location" class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Department</label>
+          <input id="department" class="w-full border rounded-lg px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">Contact Number</label>
+          <input id="contact_number" class="w-full border rounded-lg px-3 py-2">
+        </div>
+      </section>
+
+      <!-- Leave Details -->
+      <section>
+        <label class="block text-sm font-bold mb-2">Leave Details</label>
+        <div class="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-sm mb-1">First date of leave</label>
+            <input id="leave_first_date" type="date" class="w-full border rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Last date of leave</label>
+            <input id="leave_last_date" type="date" class="w-full border rounded-lg px-3 py-2">
+          </div>
+        </div>
+
+        <div class="mt-3 grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm mb-1">Type of leave taken (Specify)</label>
+            <input id="leave_type" class="w-full border rounded-lg px-3 py-2" placeholder="e.g., Annual / Sick / ...">
+          </div>
+          <label class="flex items-center gap-2 text-sm mt-7 sm:mt-7">
+            <input id="annual_leave" type="checkbox"> Annual leave
+          </label>
+        </div>
+      </section>
+
+      <!-- Duty Resumption -->
+      <section class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-sm mb-1">Date of duty resumed</label>
+          <input id="duty_resumed_date" type="date" class="w-full border rounded-lg px-3 py-2">
+        </div>
+      </section>
+
+      <!-- Justification -->
+      <section>
+        <label class="block text-sm mb-1">If delayed in duty resumption, Please specify the reason: (Justification)</label>
+        <textarea id="delay_reason" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
+      </section>
+
+      <!-- Supporting documents -->
+      <section>
+        <label class="block text-sm font-bold mb-2">Supporting documents attached</label>
+        <div class="flex items-center gap-6 text-sm">
+          <label class="flex items-center gap-2"><input type="radio" name="docs" value="true"> Yes</label>
+          <label class="flex items-center gap-2"><input type="radio" name="docs" value="false"> No</label>
+        </div>
+      </section>
+
+      <!-- For Payroll use only -->
+      <section class="rounded-xl border p-3">
+        <div class="font-bold mb-2 text-sm">(For Payroll use only)</div>
+        <div class="grid sm:grid-cols-2 gap-3 text-sm">
+          <div class="sm:col-span-2">
+            <label class="block mb-1">Remarks (Action for Payroll)</label>
+            <textarea id="payroll_remarks" rows="2" class="w-full border rounded px-2 py-1"></textarea>
+          </div>
+          <div>
+            <label class="block mb-1">Checked by</label>
+            <input id="payroll_checked_by" class="w-full border rounded px-2 py-1">
+          </div>
+          <div>
+            <label class="block mb-1">Date & Signature</label>
+            <input id="payroll_checked_date" type="date" class="w-full border rounded px-2 py-1">
+          </div>
+          <div>
+            <label class="block mb-1">HR Department — Date & Signature</label>
+            <input id="hr_signature_date" type="date" class="w-full border rounded px-2 py-1">
+          </div>
+        </div>
+      </section>
+
+      <button class="w-full bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg py-2">
+        Submit
+      </button>
+    </form>
+  </main>
+
+  <script type="module">
+    import { requireAuth, supabase } from './js/auth.js';
+    import { toast } from './js/ui.js';
+
+    // السماح للموظف/المشرف بتعبئة النموذج (كما هو الحال في بقية الطلبات)
+    const ctx = await requireAuth(['employee','supervisor']);
+    if (!ctx) return;
+
+    const u = ctx.userRow || {};
+    // تعبئة افتراضية
+    document.getElementById('date').value      = new Date().toISOString().slice(0,10);
+    document.getElementById('emp_id').value    = u.jobID || '';
+    document.getElementById('emp_name').value  = u.Name || u.En_Name || '';
+    document.getElementById('position').value  = u.POS2 || '';
+    document.getElementById('location').value  = u.location || '';
+    // Department غير موجود بحقل صريح في users — اتركه يدويًا
+
+    // إرسال
+    document.getElementById('drForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const docsRadio = document.querySelector('input[name="docs"]:checked');
+
+      const payload = {
+        employee_id: ctx.session.user.id,
+
+        date: document.getElementById('date').value || null,
+        position: (document.getElementById('position').value || '').trim() || null,
+        location: (document.getElementById('location').value || '').trim() || null,
+        department: (document.getElementById('department').value || '').trim() || null,
+        contact_number: (document.getElementById('contact_number').value || '').trim() || null,
+
+        leave_first_date: document.getElementById('leave_first_date').value || null,
+        leave_last_date:  document.getElementById('leave_last_date').value  || null,
+        leave_type: (document.getElementById('leave_type').value || '').trim() || null,
+        leave_annual: document.getElementById('annual_leave').checked || false,
+
+        duty_resumed_date: document.getElementById('duty_resumed_date').value || null,
+        delay_reason: (document.getElementById('delay_reason').value || '').trim() || null,
+        supporting_docs: docsRadio ? (docsRadio.value === 'true') : null,
+
+        payroll_remarks: (document.getElementById('payroll_remarks').value || '').trim() || null,
+        payroll_checked_by: (document.getElementById('payroll_checked_by').value || '').trim() || null,
+        payroll_checked_date: document.getElementById('payroll_checked_date').value || null,
+        hr_signature_date: document.getElementById('hr_signature_date').value || null
+      };
+
+      try {
+        const { error } = await supabase.from('duty_resumptions').insert(payload);
+        if (error) throw error;
+        toast('Duty Resumption submitted successfully');
+        e.target.reset();
+        document.getElementById('date').value = new Date().toISOString().slice(0,10);
+      } catch (err) {
+        toast(err.message || 'Failed to submit', 'error');
+      }
+    });
+  </script>
+</body>
+</html>
